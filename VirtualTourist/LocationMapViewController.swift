@@ -12,13 +12,27 @@ import MapKit
 class LocationMapViewController: UIViewController {
 
     @IBOutlet weak var mapView: MKMapView!
+
     override func viewDidLoad() {
         super.viewDidLoad()
         // Do any additional setup after loading the view, typically from a nib.
+
+        let longTap: UILongPressGestureRecognizer = UILongPressGestureRecognizer(target: self, action: "addPin:")
+        longTap.minimumPressDuration = 0.5
+        mapView.addGestureRecognizer(longTap)
     }
 
     override func didReceiveMemoryWarning() {
         super.didReceiveMemoryWarning()
         // Dispose of any resources that can be recreated.
+    }
+
+    // Add Pin by using gestureRecognizer and translating Coordinate
+    func addPin(gestureRecognizer: UIGestureRecognizer) {
+        let tapPoint: CGPoint = gestureRecognizer.locationInView(mapView)
+        let touchMapCoordinate: CLLocationCoordinate2D = mapView.convertPoint(tapPoint, toCoordinateFromView: mapView)
+        let annotation = MKPointAnnotation()
+        annotation.coordinate = touchMapCoordinate
+        mapView.addAnnotation(annotation)
     }
 }

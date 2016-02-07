@@ -64,11 +64,10 @@
 		B4BBFE2F1C67F5640000AE22 /* VirtualTourist */ = {
 			isa = PBXGroup;
 			children = (
+				B4BBFE301C67F5640000AE22 /* AppDelegate.swift */,
 				B4BBFE341C67F5640000AE22 /* Main.storyboard */,
 				B4BBFE451C67F6A40000AE22 /* Models */,
-				B4BBFE301C67F5640000AE22 /* AppDelegate.swift */,
-				B4BBFE321C67F5640000AE22 /* LocationMapViewController.swift */,
-				B4BBFE4C1C6805750000AE22 /* PhotoAlbumViewController.swift */,
+				B4BBFE4E1C6806D90000AE22 /* Controllers */,
 				B4BBFE3A1C67F5640000AE22 /* Assets.xcassets */,
 				B4BBFE3C1C67F5640000AE22 /* LaunchScreen.storyboard */,
 				B4BBFE3F1C67F5640000AE22 /* Info.plist */,
@@ -85,6 +84,15 @@
 				B4BBFE4A1C67F8990000AE22 /* CoreDataStackManager.swift */,
 			);
 			name = Models;
+			sourceTree = "<group>";
+		};
+		B4BBFE4E1C6806D90000AE22 /* Controllers */ = {
+			isa = PBXGroup;
+			children = (
+				B4BBFE321C67F5640000AE22 /* LocationMapViewController.swift */,
+				B4BBFE4C1C6805750000AE22 /* PhotoAlbumViewController.swift */,
+			);
+			name = Controllers;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
