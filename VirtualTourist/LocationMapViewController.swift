@@ -35,9 +35,8 @@ class LocationMapViewController: UIViewController {
         annotation.coordinate = touchMapCoordinate
         mapView.addAnnotation(annotation)
 
-
         let nextView = storyboard?.instantiateViewControllerWithIdentifier("PhotoAlbumViewController") as! PhotoAlbumViewController
         nextView.annotation = annotation
-        navigationController?.pushViewController(nextView, animated: true)
+        showViewController(nextView, sender: self)
     }
 }

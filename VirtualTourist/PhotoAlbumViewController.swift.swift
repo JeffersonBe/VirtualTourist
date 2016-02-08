@@ -21,10 +21,7 @@ class PhotoAlbumViewController: UIViewController {
     override func viewDidLoad() {
         super.viewDidLoad()
         // Do any additional setup after loading the view, typically from a nib.
-
-        if annotation == annotation {
-            updateMap([annotation!])
-        }
+        updateMap(annotation!)
     }
 
     override func didReceiveMemoryWarning() {
@@ -32,7 +29,7 @@ class PhotoAlbumViewController: UIViewController {
         // Dispose of any resources that can be recreated.
     }
 
-    func updateMap(annotation: [MKAnnotation]) {
-        mapView.showAnnotations(annotation, animated: true)
+    func updateMap(annotation: MKPointAnnotation) {
+        mapView.showAnnotations([annotation], animated: true)
     }
 }
