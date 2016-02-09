@@ -29,14 +29,18 @@ class LocationMapViewController: UIViewController {
 
     // Add Pin by using gestureRecognizer and translating Coordinate
     func addPin(gestureRecognizer: UIGestureRecognizer) {
+        guard gestureRecognizer.state != UIGestureRecognizerState.Began else {
+            return
+        }
         let tapPoint: CGPoint = gestureRecognizer.locationInView(mapView)
         let touchMapCoordinate: CLLocationCoordinate2D = mapView.convertPoint(tapPoint, toCoordinateFromView: mapView)
         let annotation = MKPointAnnotation()
         annotation.coordinate = touchMapCoordinate
         mapView.addAnnotation(annotation)
-
-        let nextView = storyboard?.instantiateViewControllerWithIdentifier("PhotoAlbumViewController") as! PhotoAlbumViewController
-        nextView.annotation = annotation
-        showViewController(nextView, sender: self)
+        dispatch_async(dispatch_get_main_queue()) {
+            let nextView = self.storyboard?.instantiateViewControllerWithIdentifier("PhotoAlbumViewController") as! PhotoAlbumViewController
+            nextView.annotation = annotation
+            self.navigationController?.pushViewController(nextView, animated: true)
+        }
     }
 }

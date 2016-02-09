@@ -7,6 +7,7 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		B41435771C6A6F170065D3C9 /* Main.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = B41435761C6A6F170065D3C9 /* Main.storyboard */; };
 		B44078041C68B62E0023CC3B /* Flickr.swift in Sources */ = {isa = PBXBuildFile; fileRef = B44078031C68B62E0023CC3B /* Flickr.swift */; };
 		B44078061C68B75D0023CC3B /* FlickrConstant.swift in Sources */ = {isa = PBXBuildFile; fileRef = B44078051C68B75D0023CC3B /* FlickrConstant.swift */; };
 		B440780C1C68B8D30023CC3B /* Key.plist in Resources */ = {isa = PBXBuildFile; fileRef = B440780B1C68B8D30023CC3B /* Key.plist */; };
@@ -20,10 +21,10 @@
 		B4BBFE491C67F81A0000AE22 /* Photo.swift in Sources */ = {isa = PBXBuildFile; fileRef = B4BBFE481C67F81A0000AE22 /* Photo.swift */; };
 		B4BBFE4B1C67F8990000AE22 /* CoreDataStackManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = B4BBFE4A1C67F8990000AE22 /* CoreDataStackManager.swift */; };
 		B4BBFE4D1C6805750000AE22 /* PhotoAlbumViewController.swift.swift in Sources */ = {isa = PBXBuildFile; fileRef = B4BBFE4C1C6805750000AE22 /* PhotoAlbumViewController.swift.swift */; };
-		B4BBFE501C6809890000AE22 /* Main.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = B4BBFE4F1C6809890000AE22 /* Main.storyboard */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
+		B41435761C6A6F170065D3C9 /* Main.storyboard */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = file.storyboard; path = Main.storyboard; sourceTree = "<group>"; };
 		B44078031C68B62E0023CC3B /* Flickr.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Flickr.swift; sourceTree = "<group>"; };
 		B44078051C68B75D0023CC3B /* FlickrConstant.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = FlickrConstant.swift; sourceTree = "<group>"; };
 		B440780B1C68B8D30023CC3B /* Key.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; path = Key.plist; sourceTree = "<group>"; };
@@ -39,7 +40,6 @@
 		B4BBFE481C67F81A0000AE22 /* Photo.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Photo.swift; sourceTree = "<group>"; };
 		B4BBFE4A1C67F8990000AE22 /* CoreDataStackManager.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = CoreDataStackManager.swift; sourceTree = "<group>"; };
 		B4BBFE4C1C6805750000AE22 /* PhotoAlbumViewController.swift.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = PhotoAlbumViewController.swift.swift; sourceTree = "<group>"; };
-		B4BBFE4F1C6809890000AE22 /* Main.storyboard */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = file.storyboard; path = Main.storyboard; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -81,7 +81,7 @@
 			isa = PBXGroup;
 			children = (
 				B4BBFE301C67F5640000AE22 /* AppDelegate.swift */,
-				B4BBFE4F1C6809890000AE22 /* Main.storyboard */,
+				B41435761C6A6F170065D3C9 /* Main.storyboard */,
 				B44078031C68B62E0023CC3B /* Flickr.swift */,
 				B44078051C68B75D0023CC3B /* FlickrConstant.swift */,
 				B4BBFE451C67F6A40000AE22 /* Models */,
@@ -148,6 +148,7 @@
 				TargetAttributes = {
 					B4BBFE2C1C67F5630000AE22 = {
 						CreatedOnToolsVersion = 7.2.1;
+						DevelopmentTeam = 94RVN7D5EH;
 					};
 				};
 			};
@@ -175,9 +176,9 @@
 			buildActionMask = 2147483647;
 			files = (
 				B440780C1C68B8D30023CC3B /* Key.plist in Resources */,
-				B4BBFE501C6809890000AE22 /* Main.storyboard in Resources */,
 				B4BBFE3E1C67F5640000AE22 /* LaunchScreen.storyboard in Resources */,
 				B4BBFE3B1C67F5640000AE22 /* Assets.xcassets in Resources */,
+				B41435771C6A6F170065D3C9 /* Main.storyboard in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -319,6 +320,7 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				CODE_SIGN_IDENTITY = "iPhone Developer";
 				INFOPLIST_FILE = VirtualTourist/Info.plist;
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks";
 				PRODUCT_BUNDLE_IDENTIFIER = com.jeffersonbonnaire.VirtualTourist;
@@ -330,6 +332,7 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				CODE_SIGN_IDENTITY = "iPhone Developer";
 				INFOPLIST_FILE = VirtualTourist/Info.plist;
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks";
 				PRODUCT_BUNDLE_IDENTIFIER = com.jeffersonbonnaire.VirtualTourist;

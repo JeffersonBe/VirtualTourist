@@ -22,10 +22,12 @@ class PhotoAlbumViewController: UIViewController, UICollectionViewDelegate {
     override func viewDidLoad() {
         super.viewDidLoad()
         // Do any additional setup after loading the view, typically from a nib.
-        updateMap(annotation!)
-        loadPhotos(annotation!)
+        if annotation != nil {
+            updateMap(annotation!)
+            loadPhotos(annotation!)
+        }
         collectionView.delegate = self
-        collectionView!.registerClass(CustomCollectionViewCell.self, forCellWithReuseIdentifier: "CollectionViewCell")
+        collectionView!.registerClass(CustomCollectionViewCell.self,forCellWithReuseIdentifier: "CollectionViewCell")
         collectionView.backgroundColor = UIColor.clearColor()
     }
 
