@@ -11,7 +11,7 @@ import Foundation
 import UIKit
 import CoreData
 
-class Photo : NSManagedObject {
+class Photo: NSManagedObject {
 
     struct Keys {
         static let Title = "title"
@@ -21,7 +21,8 @@ class Photo : NSManagedObject {
     @NSManaged var title: String
     @NSManaged var imageUrl: String
 
-    override init(entity: NSEntityDescription, insertIntoManagedObjectContext context: NSManagedObjectContext?) {
+    override init(entity: NSEntityDescription,
+        insertIntoManagedObjectContext context: NSManagedObjectContext?) {
         super.init(entity: entity, insertIntoManagedObjectContext: context)
     }
 

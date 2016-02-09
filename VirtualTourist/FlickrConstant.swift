@@ -13,7 +13,7 @@ extension Flickr {
     struct Constants {
 
         // MARK: - URLs
-        static let ApiKey = NSDictionary(contentsOfFile: NSBundle.mainBundle().pathForResource("Key", ofType: "plist")!)
+        static let ApiKey = NSDictionary(contentsOfFile: NSBundle.mainBundle().pathForResource("Key", ofType: "plist")!)?.valueForKey("API_KEY")
         static let BaseUrl = "https://api.flickr.com/services/rest/"
     }
 
@@ -27,7 +27,7 @@ extension Flickr {
         static let ID = "id"
         static let ErrorStatusMessage = "status_message"
         static let Extras = "url_m"
-        static let Data_format = "json"
+        static let Format = "json"
         static let No_json_Callback = "1"
     }
 }
