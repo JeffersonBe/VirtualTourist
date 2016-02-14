@@ -8,27 +8,36 @@
 
 import UIKit
 import MapKit
+import CoreData
 
-class PhotoAlbumViewController: UIViewController, UICollectionViewDelegate {
+class PhotoAlbumViewController: UIViewController, UICollectionViewDelegate, NSFetchedResultsControllerDelegate {
 
     @IBOutlet weak var mapView: MKMapView!
     @IBOutlet weak var collectionView: UICollectionView!
     @IBOutlet weak var toolBar: UIToolbar!
     @IBOutlet weak var toolBarButton: UIBarButtonItem!
 
-    var annotation: MKPointAnnotation?
-    var photos: AnyObject = []
+    var selectedPin: Pin!
+    var temporaryContext: NSManagedObjectContext!
 
     override func viewDidLoad() {
         super.viewDidLoad()
-        // Do any additional setup after loading the view, typically from a nib.
-        if annotation != nil {
-            updateMap(annotation!)
-            loadPhotos(annotation!)
-        }
+
+        let annotation = MKPointAnnotation()
+        annotation.coordinate = selectedPin.coordinate
+
+        updateMap(annotation)
+        loadPhotos(annotation)
+
         collectionView.delegate = self
         collectionView!.registerClass(CustomCollectionViewCell.self,forCellWithReuseIdentifier: "CollectionViewCell")
         collectionView.backgroundColor = UIColor.clearColor()
+
+        do {
+            try fetchedResultsController.performFetch()
+        } catch {}
+
+        fetchedResultsController.delegate = self
     }
 
     override func didReceiveMemoryWarning() {
@@ -36,24 +45,39 @@ class PhotoAlbumViewController: UIViewController, UICollectionViewDelegate {
         // Dispose of any resources that can be recreated.
     }
 
+    var sharedContext: NSManagedObjectContext {
+        return CoreDataStackManager.sharedInstance.managedObjectContext
+    }
+
+    lazy var fetchedResultsController: NSFetchedResultsController = {
+
+        let fetchRequest = NSFetchRequest(entityName: "Photo")
+        fetchRequest.predicate = NSPredicate(format: "locations == %@", self.selectedPin)
+        fetchRequest.sortDescriptors = []
+
+        let fetchedResultsController = NSFetchedResultsController(fetchRequest: fetchRequest,
+            managedObjectContext: self.sharedContext,
+            sectionNameKeyPath: nil,
+            cacheName: nil)
+
+        return fetchedResultsController
+        
+    }()
+
     func updateMap(annotation: MKPointAnnotation) {
         mapView.showAnnotations([annotation], animated: true)
     }
 
-    func loadPhotos(annotations: MKPointAnnotation) {
+    func loadPhotos(annotation: MKPointAnnotation) {
 
-        guard let latitude = annotation?.coordinate.latitude, let longitude = annotation?.coordinate.longitude else {
+        guard -180...180 ~= annotation.coordinate.latitude || -90...90 ~= annotation.coordinate.longitude else {
             return
         }
 
-        guard -180...180 ~= latitude || -90...90 ~= longitude else {
-            return
-        }
-
-        let minlongitude = Int(longitude) * -1
-        let minlatitude = Int(latitude) * -1
-        let maxlongitude = Int(longitude)
-        let maxlatitude = Int(latitude)
+        let minlongitude = Int(annotation.coordinate.longitude) * -1
+        let minlatitude = Int(annotation.coordinate.latitude) * -1
+        let maxlongitude = Int(annotation.coordinate.longitude)
+        let maxlatitude = Int(annotation.coordinate.latitude)
 
         let parameters: [String:AnyObject] = [
             "method": Flickr.Resources.SearchPhotos,
@@ -62,6 +86,7 @@ class PhotoAlbumViewController: UIViewController, UICollectionViewDelegate {
             "extras": Flickr.Keys.Extras,
             "format": Flickr.Keys.Format,
             "nojsoncallback": Flickr.Keys.No_json_Callback,
+            "accuracy": 6,
             "per_page": 30
         ]
 
@@ -78,35 +103,44 @@ class PhotoAlbumViewController: UIViewController, UICollectionViewDelegate {
                     return
             }
 
+            let _ = photoArray.map() { (dictionary: [String: AnyObject]) -> Photo in
+                let photo = Photo(dictionary: dictionary, context: self.sharedContext)
+                photo.locations = self.selectedPin
+                return photo
+            }
+            
+            // Save managed object context
+            CoreDataStackManager.sharedInstance.saveContext()
             dispatch_async(dispatch_get_main_queue()) {
-                self.photos = photoArray
                 self.collectionView.reloadData()
             }
         }
     }
 
     // MARK: CollectionView
-
-    func numberOfSectionsInCollectionView(collectionView: UICollectionView) -> Int {
-        return 1
-    }
-
     func collectionView(collectionView: UICollectionView, numberOfItemsInSection section: Int) -> Int {
-        return photos.count
+        let sectionInfo = fetchedResultsController.sections![section] as NSFetchedResultsSectionInfo
+        return sectionInfo.numberOfObjects
     }
 
     func collectionView(collectionView: UICollectionView, cellForItemAtIndexPath indexPath: NSIndexPath) -> UICollectionViewCell {
+        let photo = fetchedResultsController.objectAtIndexPath(indexPath) as! Photo
         let cell = collectionView.dequeueReusableCellWithReuseIdentifier("CollectionViewCell", forIndexPath: indexPath) as! CustomCollectionViewCell
-        print(photos[indexPath.row])
-        if let filePath = photos[indexPath.row]["url_m"] as? String {
-            Flickr.sharedInstance.taskForImage(filePath) { imageData, error in
+        configureCell(cell, withPhoto: photo)
+        return cell
+    }
+
+    func configureCell(cell: CustomCollectionViewCell, withPhoto photo: Photo) {
+            Flickr.sharedInstance.taskForImage(photo.imageUrl) { imageData, error in
                 if let image = imageData {
                     dispatch_async(dispatch_get_main_queue()) {
                         cell.imageView.image = UIImage(data: image)
                     }
                 }
             }
-        }
-        return cell
+    }
+
+    func controllerWillChangeContent(controller: NSFetchedResultsController) {
+        collectionView.reloadInputViews()
     }
 }

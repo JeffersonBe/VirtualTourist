@@ -13,13 +13,9 @@ import CoreData
 
 class Photo: NSManagedObject {
 
-    struct Keys {
-        static let Title = "title"
-        static let imageUrl = "url_m"
-    }
-
     @NSManaged var title: String
     @NSManaged var imageUrl: String
+    @NSManaged var locations: Pin?
 
     override init(entity: NSEntityDescription,
         insertIntoManagedObjectContext context: NSManagedObjectContext?) {
@@ -32,8 +28,7 @@ class Photo: NSManagedObject {
         let entity =  NSEntityDescription.entityForName("Photo", inManagedObjectContext: context)!
         super.init(entity: entity, insertIntoManagedObjectContext: context)
 
-        // Dictionary
-        title = dictionary[Keys.Title] as! String
-        imageUrl = dictionary[Keys.imageUrl] as! String
+        title = dictionary[Flickr.JSONKeys.Title] as! String
+        imageUrl = dictionary[Flickr.JSONKeys.imageUrl] as! String
     }
 }

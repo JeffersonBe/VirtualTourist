@@ -11,15 +11,11 @@ import Foundation
 extension Flickr {
 
     struct Constants {
-
-        // MARK: - URLs
         static let ApiKey = NSDictionary(contentsOfFile: NSBundle.mainBundle().pathForResource("Key", ofType: "plist")!)?.valueForKey("API_KEY")
         static let BaseUrl = "https://api.flickr.com/services/rest/"
     }
 
     struct Resources {
-
-        // MARK: - Methods
         static let SearchPhotos = "flickr.photos.search";
     }
 
@@ -29,5 +25,11 @@ extension Flickr {
         static let Extras = "url_m"
         static let Format = "json"
         static let No_json_Callback = "1"
+    }
+
+    struct JSONKeys {
+        static let Id = "id"
+        static let Title = "title"
+        static let imageUrl = "url_m"
     }
 }
