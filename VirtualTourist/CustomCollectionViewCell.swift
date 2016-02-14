@@ -14,8 +14,9 @@ class CustomCollectionViewCell: UICollectionViewCell {
 
     override init(frame: CGRect) {
         super.init(frame: frame)
-        imageView = UIImageView(frame: CGRect(x: 0, y: 0, width: frame.size.width, height: frame.size.height*2/3))
+        imageView = UIImageView(frame: CGRect(x: 0, y: 0, width: frame.size.width, height: frame.size.height))
         imageView.contentMode = UIViewContentMode.ScaleAspectFit
+        imageView.image = UIImage(named: "placeholder")
         contentView.addSubview(imageView)
     }
 

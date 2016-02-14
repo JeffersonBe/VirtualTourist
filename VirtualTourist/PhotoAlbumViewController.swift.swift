@@ -10,7 +10,7 @@ import UIKit
 import MapKit
 import CoreData
 
-class PhotoAlbumViewController: UIViewController, UICollectionViewDelegate, NSFetchedResultsControllerDelegate {
+class PhotoAlbumViewController: UIViewController, UICollectionViewDelegate, UICollectionViewDelegateFlowLayout, NSFetchedResultsControllerDelegate {
 
     @IBOutlet weak var mapView: MKMapView!
     @IBOutlet weak var collectionView: UICollectionView!
@@ -23,15 +23,15 @@ class PhotoAlbumViewController: UIViewController, UICollectionViewDelegate, NSFe
     override func viewDidLoad() {
         super.viewDidLoad()
 
-        let annotation = MKPointAnnotation()
-        annotation.coordinate = selectedPin.coordinate
-
-        updateMap(annotation)
-        loadPhotos(annotation)
-
         collectionView.delegate = self
         collectionView!.registerClass(CustomCollectionViewCell.self,forCellWithReuseIdentifier: "CollectionViewCell")
         collectionView.backgroundColor = UIColor.clearColor()
+
+        let flow = UICollectionViewFlowLayout()
+        collectionView.collectionViewLayout = flow
+        collectionView.contentInset = UIEdgeInsetsMake(10, 0, 0, 0)
+        flow.minimumInteritemSpacing = 1.0
+        flow.minimumLineSpacing = 1.0
 
         do {
             try fetchedResultsController.performFetch()
@@ -43,6 +43,15 @@ class PhotoAlbumViewController: UIViewController, UICollectionViewDelegate, NSFe
     override func didReceiveMemoryWarning() {
         super.didReceiveMemoryWarning()
         // Dispose of any resources that can be recreated.
+    }
+
+    override func viewWillAppear(animated: Bool) {
+        super.viewWillAppear(true)
+        print("2")
+        let annotation = MKPointAnnotation()
+        annotation.coordinate = selectedPin.coordinate
+        updateMap(annotation)
+        loadPhotos(annotation)
     }
 
     var sharedContext: NSManagedObjectContext {
@@ -69,24 +78,13 @@ class PhotoAlbumViewController: UIViewController, UICollectionViewDelegate, NSFe
     }
 
     func loadPhotos(annotation: MKPointAnnotation) {
-
-        guard -180...180 ~= annotation.coordinate.latitude || -90...90 ~= annotation.coordinate.longitude else {
-            return
-        }
-
-        let minlongitude = Int(annotation.coordinate.longitude) * -1
-        let minlatitude = Int(annotation.coordinate.latitude) * -1
-        let maxlongitude = Int(annotation.coordinate.longitude)
-        let maxlatitude = Int(annotation.coordinate.latitude)
-
         let parameters: [String:AnyObject] = [
             "method": Flickr.Resources.SearchPhotos,
             "api_key": Flickr.Constants.ApiKey!,
-            "bbox": "\(minlongitude),\(minlatitude),\(maxlongitude),\(maxlatitude)",
+            "bbox": calculateBboxParameters(annotation.coordinate.latitude, longitude: annotation.coordinate.longitude),
             "extras": Flickr.Keys.Extras,
             "format": Flickr.Keys.Format,
             "nojsoncallback": Flickr.Keys.No_json_Callback,
-            "accuracy": 6,
             "per_page": 30
         ]
 
@@ -140,7 +138,51 @@ class PhotoAlbumViewController: UIViewController, UICollectionViewDelegate, NSFe
             }
     }
 
+    func collectionView(collectionView: UICollectionView,
+        layout collectionViewLayout: UICollectionViewLayout,
+        sizeForItemAtIndexPath indexPath: NSIndexPath) -> CGSize {
+            return CGSize(width: 100, height: 100)
+    }
+
+    func collectionView(collectionView: UICollectionView,
+        layout collectionViewLayout: UICollectionViewLayout,
+        insetForSectionAtIndex section: Int) -> UIEdgeInsets {
+            return UIEdgeInsetsZero
+    }
+
     func controllerWillChangeContent(controller: NSFetchedResultsController) {
         collectionView.reloadInputViews()
+    }
+
+    // MARK: Helpers
+
+    func calculateBboxParameters(latitude: Double, longitude: Double) -> String {
+        let latMin = -90.0
+        let latMax = 90.0
+        let longMin = -180.0
+        let longMax = 180.0
+
+        let bboxEdge = 0.1
+
+        var bBoxLatMin = latitude - bboxEdge
+        var bBoxLongMin = longitude - bboxEdge
+        var bBoxLatMax = latitude + bboxEdge
+        var bBoxLongMax = longitude + bboxEdge
+
+        if bBoxLatMax > latMax {
+            bBoxLatMax = latMax
+            bBoxLatMin = latMax - bboxEdge
+        } else if bBoxLatMin < latMin {
+            bBoxLatMin = latMin
+            bBoxLatMax = latMax - bboxEdge
+        }
+
+        if bBoxLongMax > longMax {
+            bBoxLongMax = (bBoxLongMax - longMax) + longMin
+        } else if bBoxLongMin < longMin {
+            bBoxLongMin = longMax - (bBoxLongMin + longMin)
+        }
+
+        return "\(bBoxLongMin),\(bBoxLatMin),\(bBoxLongMax),\(bBoxLatMax)"
     }
 }

@@ -59,7 +59,7 @@
         <!--Photo Album View Controller-->
         <scene sceneID="v6w-OB-5pJ">
             <objects>
-                <viewController storyboardIdentifier="PhotoAlbumViewController" id="oFg-hz-peW" customClass="PhotoAlbumViewController" customModule="VirtualTourist" customModuleProvider="target" sceneMemberID="viewController">
+                <viewController storyboardIdentifier="PhotoAlbumViewController" automaticallyAdjustsScrollViewInsets="NO" id="oFg-hz-peW" customClass="PhotoAlbumViewController" customModule="VirtualTourist" customModuleProvider="target" sceneMemberID="viewController">
                     <layoutGuides>
                         <viewControllerLayoutGuide type="top" id="Rvq-z4-x1P"/>
                         <viewControllerLayoutGuide type="bottom" id="S5t-lw-aLy"/>
@@ -68,7 +68,7 @@
                         <rect key="frame" x="0.0" y="0.0" width="600" height="600"/>
                         <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
                         <subviews>
-                            <collectionView clipsSubviews="YES" multipleTouchEnabled="YES" contentMode="scaleToFill" misplaced="YES" dataMode="prototypes" translatesAutoresizingMaskIntoConstraints="NO" id="SEd-kX-dFd">
+                            <collectionView clipsSubviews="YES" multipleTouchEnabled="YES" contentMode="scaleToFill" dataMode="prototypes" translatesAutoresizingMaskIntoConstraints="NO" id="SEd-kX-dFd">
                                 <rect key="frame" x="0.0" y="128" width="600" height="428"/>
                                 <collectionViewFlowLayout key="collectionViewLayout" minimumLineSpacing="10" minimumInteritemSpacing="10" id="gzJ-29-vP0">
                                     <size key="itemSize" width="50" height="50"/>
@@ -103,7 +103,7 @@
                                     <barButtonItem style="plain" systemItem="flexibleSpace" id="v93-9m-r7E"/>
                                 </items>
                             </toolbar>
-                            <mapView clipsSubviews="YES" multipleTouchEnabled="YES" contentMode="scaleToFill" misplaced="YES" mapType="standard" translatesAutoresizingMaskIntoConstraints="NO" id="Tr4-gj-N7e">
+                            <mapView clipsSubviews="YES" multipleTouchEnabled="YES" contentMode="scaleToFill" mapType="standard" translatesAutoresizingMaskIntoConstraints="NO" id="Tr4-gj-N7e">
                                 <rect key="frame" x="0.0" y="20" width="600" height="100"/>
                             </mapView>
                         </subviews>
@@ -116,7 +116,7 @@
                             <constraint firstAttribute="trailingMargin" secondItem="SEd-kX-dFd" secondAttribute="trailing" constant="-20" id="UJh-wO-ggV"/>
                             <constraint firstItem="SEd-kX-dFd" firstAttribute="top" secondItem="Tr4-gj-N7e" secondAttribute="bottom" constant="8" id="WEE-YQ-vi0"/>
                             <constraint firstAttribute="trailingMargin" secondItem="GpT-b6-uqm" secondAttribute="trailing" constant="-20" id="ckc-xz-eVe"/>
-                            <constraint firstItem="Tr4-gj-N7e" firstAttribute="height" secondItem="oFF-05-MlV" secondAttribute="height" constant="-400" id="jiw-BI-wg4"/>
+                            <constraint firstItem="Tr4-gj-N7e" firstAttribute="height" secondItem="oFF-05-MlV" secondAttribute="height" constant="-500" id="jiw-BI-wg4"/>
                             <constraint firstAttribute="trailingMargin" secondItem="Tr4-gj-N7e" secondAttribute="trailing" constant="-20" id="uk2-CC-nFY"/>
                             <constraint firstItem="SEd-kX-dFd" firstAttribute="leading" secondItem="oFF-05-MlV" secondAttribute="leadingMargin" constant="-20" id="xIc-ge-3yc"/>
                             <constraint firstItem="Tr4-gj-N7e" firstAttribute="top" secondItem="Rvq-z4-x1P" secondAttribute="bottom" id="zgL-JP-5PA"/>

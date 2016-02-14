@@ -10,13 +10,15 @@ import UIKit
 import MapKit
 import CoreData
 
-class LocationMapViewController: UIViewController, NSFetchedResultsControllerDelegate {
+class LocationMapViewController: UIViewController, NSFetchedResultsControllerDelegate, MKMapViewDelegate {
 
     @IBOutlet weak var mapView: MKMapView!
 
     override func viewDidLoad() {
         super.viewDidLoad()
         // Do any additional setup after loading the view, typically from a nib.
+
+        mapView.delegate = self
 
         let longTap: UILongPressGestureRecognizer = UILongPressGestureRecognizer(target: self, action: "addPin:")
         longTap.minimumPressDuration = 0.5
@@ -28,6 +30,10 @@ class LocationMapViewController: UIViewController, NSFetchedResultsControllerDel
 
         fetchedResultsController.delegate = self
         mapView.addAnnotations(fetchAllPins())
+    }
+
+    var sharedContext: NSManagedObjectContext {
+        return CoreDataStackManager.sharedInstance.managedObjectContext
     }
 
     lazy var fetchedResultsController: NSFetchedResultsController = {
@@ -43,8 +49,12 @@ class LocationMapViewController: UIViewController, NSFetchedResultsControllerDel
         return fetchedResultsController
     }()
 
-    var sharedContext: NSManagedObjectContext {
-        return CoreDataStackManager.sharedInstance.managedObjectContext
+    // MARK: Mapkit Delegate
+
+    func mapView(mapView: MKMapView, didSelectAnnotationView view: MKAnnotationView){
+        let nextView = self.storyboard?.instantiateViewControllerWithIdentifier("PhotoAlbumViewController") as! PhotoAlbumViewController
+        nextView.selectedPin = view.annotation as! Pin
+        self.navigationController?.pushViewController(nextView, animated: true)
     }
 
     // Add Pin by using gestureRecognizer and translating Coordinate
@@ -66,8 +76,7 @@ class LocationMapViewController: UIViewController, NSFetchedResultsControllerDel
         dispatch_async(dispatch_get_main_queue()) {
             let nextView = self.storyboard?.instantiateViewControllerWithIdentifier("PhotoAlbumViewController") as! PhotoAlbumViewController
             nextView.selectedPin = pin
-            self.navigationController?.pushViewController(nextView, animated: true)
-        }
+            self.navigationController?.pushViewController(nextView, animated: true)        }
     }
 
     func fetchAllPins() -> [Pin] {
