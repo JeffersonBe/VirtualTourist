@@ -13,6 +13,7 @@ import CoreData
 class LocationMapViewController: UIViewController, NSFetchedResultsControllerDelegate, MKMapViewDelegate {
 
     @IBOutlet weak var mapView: MKMapView!
+    var annotationPin = MKPointAnnotation()
 
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -29,7 +30,7 @@ class LocationMapViewController: UIViewController, NSFetchedResultsControllerDel
         } catch {}
 
         fetchedResultsController.delegate = self
-        mapView.addAnnotations(fetchAllPins())
+        mapView.addAnnotations(fetchedResultsController.fetchedObjects as! [Pin])
     }
 
     var sharedContext: NSManagedObjectContext {
@@ -52,40 +53,110 @@ class LocationMapViewController: UIViewController, NSFetchedResultsControllerDel
     // MARK: Mapkit Delegate
 
     func mapView(mapView: MKMapView, didSelectAnnotationView view: MKAnnotationView){
-        let nextView = self.storyboard?.instantiateViewControllerWithIdentifier("PhotoAlbumViewController") as! PhotoAlbumViewController
-        nextView.selectedPin = view.annotation as! Pin
-        self.navigationController?.pushViewController(nextView, animated: true)
+        if ((view.annotation?.isKindOfClass(Pin)) != nil) {
+            showPhotoAlbum(view.annotation as! Pin)
+        }
     }
+
+    func mapView(mapView: MKMapView, viewForAnnotation annotation: MKAnnotation) -> MKAnnotationView? {
+        let reuseId = "pin"
+        var pinView = mapView.dequeueReusableAnnotationViewWithIdentifier(reuseId) as? MKPinAnnotationView
+        if pinView == nil {
+            pinView = MKPinAnnotationView(annotation: annotation, reuseIdentifier: reuseId)
+            pinView?.draggable = true
+            pinView?.canShowCallout = false
+        }
+        else {
+            pinView?.annotation = annotation
+        }
+        
+        return pinView
+    }
+
+    func mapView(mapView: MKMapView, annotationView view: MKAnnotationView, didChangeDragState newState: MKAnnotationViewDragState, fromOldState oldState: MKAnnotationViewDragState) {
+        switch (newState) {
+        case .Starting:
+            view.dragState = .Dragging
+            print("Start")
+        case .Ending, .Canceling:
+            view.dragState = .None
+            print("Finish")
+        default: break
+        }
+    }
+
+    // MARK: Helpers
 
     // Add Pin by using gestureRecognizer and translating Coordinate
     func addPin(gestureRecognizer: UIGestureRecognizer) {
-        guard gestureRecognizer.state != UIGestureRecognizerState.Began else {
-            return
+        //If the touch has now ended
+        if gestureRecognizer.state == .Began {
+
+            //Get the spot that was pressed.
+            let tapPoint: CGPoint = gestureRecognizer.locationInView(mapView)
+            let touchMapCoordinate: CLLocationCoordinate2D = mapView.convertPoint(tapPoint, toCoordinateFromView: mapView)
+            annotationPin.coordinate = touchMapCoordinate
+
+            //Add annotation to map
+            dispatch_async(dispatch_get_main_queue(), {
+                self.mapView.addAnnotation(self.annotationPin)
+            })
         }
-        let tapPoint: CGPoint = gestureRecognizer.locationInView(mapView)
-        let touchMapCoordinate: CLLocationCoordinate2D = mapView.convertPoint(tapPoint, toCoordinateFromView: mapView)
 
-        let pin = Pin(latitude: touchMapCoordinate.latitude, longitude: touchMapCoordinate.longitude, context: sharedContext)
-        let annotation = MKPointAnnotation()
-        annotation.coordinate.latitude = pin.latitude as Double
-        annotation.coordinate.longitude = pin.longitude as Double
+            //If the touch has moved / changed once the touch has began
+        else if gestureRecognizer.state == .Changed {
 
-        CoreDataStackManager.sharedInstance.saveContext()
-        mapView.addAnnotation(annotation)
+            //Check to make sure the pin has dropped
 
-        dispatch_async(dispatch_get_main_queue()) {
-            let nextView = self.storyboard?.instantiateViewControllerWithIdentifier("PhotoAlbumViewController") as! PhotoAlbumViewController
-            nextView.selectedPin = pin
-            self.navigationController?.pushViewController(nextView, animated: true)        }
+                //Get the coordinates from the map where we dragged over
+                let tapPoint: CGPoint = gestureRecognizer.locationInView(mapView)
+                let touchMapCoordinate: CLLocationCoordinate2D = mapView.convertPoint(tapPoint, toCoordinateFromView: mapView)
+            annotationPin.coordinate = touchMapCoordinate
+
+                //Update the pin view
+                dispatch_async(dispatch_get_main_queue(), {
+                    self.annotationPin.coordinate = touchMapCoordinate
+                })
+        }
+
+        if gestureRecognizer.state == .Ended {
+
+            let tapPoint: CGPoint = gestureRecognizer.locationInView(mapView)
+            let touchMapCoordinate: CLLocationCoordinate2D = mapView.convertPoint(tapPoint, toCoordinateFromView: mapView)
+
+            let pin = Pin(latitude: touchMapCoordinate.latitude, longitude: touchMapCoordinate.longitude, context: sharedContext)
+            CoreDataStackManager.sharedInstance.saveContext()
+            showPhotoAlbum(pin)
+        }
     }
 
-    func fetchAllPins() -> [Pin] {
-        let fetchRequest = NSFetchRequest(entityName: "Pin")
-        do {
-            return try sharedContext.executeFetchRequest(fetchRequest) as! [Pin]
-        } catch let error as NSError {
-            print("Error in fetchAllActors(): \(error)")
-            return [Pin]()
+    func showPhotoAlbum(pin: Pin) {
+        let nextView = self.storyboard?.instantiateViewControllerWithIdentifier("PhotoAlbumViewController") as! PhotoAlbumViewController
+        nextView.selectedPin = pin
+        self.navigationController?.pushViewController(nextView, animated: true)
+    }
+
+    // MARK: NSFetchedResultsController delegate
+
+    func controller(controller: NSFetchedResultsController, didChangeObject anObject: AnyObject, atIndexPath indexPath: NSIndexPath?, forChangeType type: NSFetchedResultsChangeType, newIndexPath: NSIndexPath?) {
+        switch (type){
+        case .Insert:
+            mapView.addAnnotation(anObject as! Pin)
+        case .Delete:
+            mapView.removeAnnotation(anObject as! Pin)
+        case .Update:
+            updatePin(anObject as! Pin)
+        case .Move:
+            return
         }
+    }
+
+    func controllerDidChangeContent(controller: NSFetchedResultsController) {
+        mapView.reloadInputViews()
+    }
+
+    func updatePin(pin: Pin) {
+        mapView.removeAnnotation(pin)
+        mapView.addAnnotation(pin)
     }
 }
