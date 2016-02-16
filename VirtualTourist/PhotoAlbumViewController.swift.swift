@@ -38,20 +38,11 @@ class PhotoAlbumViewController: UIViewController, UICollectionViewDelegate, UICo
         } catch {}
 
         fetchedResultsController.delegate = self
-    }
 
-    override func didReceiveMemoryWarning() {
-        super.didReceiveMemoryWarning()
-        // Dispose of any resources that can be recreated.
-    }
-
-    override func viewWillAppear(animated: Bool) {
-        super.viewWillAppear(true)
-        print("2")
-        let annotation = MKPointAnnotation()
-        annotation.coordinate = selectedPin.coordinate
-        updateMap(annotation)
-        loadPhotos(annotation)
+        showMap(selectedPin)
+        if fetchedResultsController.fetchedObjects?.count != 5 {
+             loadPhotos(selectedPin)
+        }
     }
 
     var sharedContext: NSManagedObjectContext {
@@ -62,7 +53,7 @@ class PhotoAlbumViewController: UIViewController, UICollectionViewDelegate, UICo
 
         let fetchRequest = NSFetchRequest(entityName: "Photo")
         fetchRequest.predicate = NSPredicate(format: "locations == %@", self.selectedPin)
-        fetchRequest.sortDescriptors = []
+        fetchRequest.sortDescriptors = [NSSortDescriptor(key: "title", ascending: true)]
 
         let fetchedResultsController = NSFetchedResultsController(fetchRequest: fetchRequest,
             managedObjectContext: self.sharedContext,
@@ -70,14 +61,14 @@ class PhotoAlbumViewController: UIViewController, UICollectionViewDelegate, UICo
             cacheName: nil)
 
         return fetchedResultsController
-        
+
     }()
 
-    func updateMap(annotation: MKPointAnnotation) {
+    func showMap(annotation: MKAnnotation) {
         mapView.showAnnotations([annotation], animated: true)
     }
 
-    func loadPhotos(annotation: MKPointAnnotation) {
+    func loadPhotos(annotation: MKAnnotation) {
         let parameters: [String:AnyObject] = [
             "method": Flickr.Resources.SearchPhotos,
             "api_key": Flickr.Constants.ApiKey!,
@@ -85,14 +76,15 @@ class PhotoAlbumViewController: UIViewController, UICollectionViewDelegate, UICo
             "extras": Flickr.Keys.Extras,
             "format": Flickr.Keys.Format,
             "nojsoncallback": Flickr.Keys.No_json_Callback,
-            "per_page": 30
+            "page": 1,
+            "per_page": 5
         ]
 
         Flickr.sharedInstance.taskForResource(parameters) { parsedResult, error in
 
             // Handle the error case
             if let error = error {
-                print("Error searching for actors: \(error.localizedDescription)")
+                print("Error searching for Images: \(error.localizedDescription)")
                 return
             }
             guard let photosDictionary = parsedResult["photos"] as? NSDictionary,
@@ -106,16 +98,14 @@ class PhotoAlbumViewController: UIViewController, UICollectionViewDelegate, UICo
                 photo.locations = self.selectedPin
                 return photo
             }
-            
+
             // Save managed object context
             CoreDataStackManager.sharedInstance.saveContext()
-            dispatch_async(dispatch_get_main_queue()) {
-                self.collectionView.reloadData()
-            }
         }
     }
 
-    // MARK: CollectionView
+    // MARK: CollectionView delegate
+
     func collectionView(collectionView: UICollectionView, numberOfItemsInSection section: Int) -> Int {
         let sectionInfo = fetchedResultsController.sections![section] as NSFetchedResultsSectionInfo
         return sectionInfo.numberOfObjects
@@ -128,7 +118,20 @@ class PhotoAlbumViewController: UIViewController, UICollectionViewDelegate, UICo
         return cell
     }
 
+    func collectionView(collectionView: UICollectionView, didSelectItemAtIndexPath indexPath: NSIndexPath) {
+        collectionView.cellForItemAtIndexPath(indexPath)
+    }
+
+    func collectionView(collectionView: UICollectionView, didDeselectItemAtIndexPath indexPath: NSIndexPath) {
+        let cell = collectionView.cellForItemAtIndexPath(indexPath)
+    }
+
     func configureCell(cell: CustomCollectionViewCell, withPhoto photo: Photo) {
+        if photo.image != nil {
+            dispatch_async(dispatch_get_main_queue()) {
+                cell.imageView.image = photo.image
+            }
+        } else {
             Flickr.sharedInstance.taskForImage(photo.imageUrl) { imageData, error in
                 if let image = imageData {
                     dispatch_async(dispatch_get_main_queue()) {
@@ -136,6 +139,7 @@ class PhotoAlbumViewController: UIViewController, UICollectionViewDelegate, UICo
                     }
                 }
             }
+        }
     }
 
     func collectionView(collectionView: UICollectionView,
@@ -150,9 +154,116 @@ class PhotoAlbumViewController: UIViewController, UICollectionViewDelegate, UICo
             return UIEdgeInsetsZero
     }
 
-    func controllerWillChangeContent(controller: NSFetchedResultsController) {
-        collectionView.reloadInputViews()
+    // MARK: NSFetchedResultsController delegate
+    // Used GIST: https://gist.github.com/AppsTitude/ce072627c61ea3999b8d#file-uicollection-and-nsfetchedresultscontrollerdelegate-integration-swift-L78
+
+    var blockOperations: [NSBlockOperation] = []
+
+    // In the did change object method:
+    func controller(controller: NSFetchedResultsController, didChangeObject anObject: AnyObject, atIndexPath indexPath: NSIndexPath?, forChangeType type: NSFetchedResultsChangeType, newIndexPath: NSIndexPath?) {
+
+        if type == NSFetchedResultsChangeType.Insert {
+            print("Insert Object: \(newIndexPath)")
+
+            blockOperations.append(
+                NSBlockOperation(block: { [weak self] in
+                    if let this = self {
+                        this.collectionView!.insertItemsAtIndexPaths([newIndexPath!])
+                    }
+                    })
+            )
+        }
+        else if type == NSFetchedResultsChangeType.Update {
+            print("Update Object: \(indexPath)")
+            blockOperations.append(
+                NSBlockOperation(block: { [weak self] in
+                    if let this = self {
+                        this.collectionView!.reloadItemsAtIndexPaths([indexPath!])
+                    }
+                    })
+            )
+        }
+        else if type == NSFetchedResultsChangeType.Move {
+            print("Move Object: \(indexPath)")
+
+            blockOperations.append(
+                NSBlockOperation(block: { [weak self] in
+                    if let this = self {
+                        this.collectionView!.moveItemAtIndexPath(indexPath!, toIndexPath: newIndexPath!)
+                    }
+                    })
+            )
+        }
+        else if type == NSFetchedResultsChangeType.Delete {
+            print("Delete Object: \(indexPath)")
+
+            blockOperations.append(
+                NSBlockOperation(block: { [weak self] in
+                    if let this = self {
+                        this.collectionView!.deleteItemsAtIndexPaths([indexPath!])
+                    }
+                    })
+            )
+        }
     }
+
+    // In the did change section method:
+    func controller(controller: NSFetchedResultsController, didChangeSection sectionInfo: NSFetchedResultsSectionInfo, atIndex sectionIndex: Int, forChangeType type: NSFetchedResultsChangeType) {
+
+        if type == NSFetchedResultsChangeType.Insert {
+            print("Insert Section: \(sectionIndex)")
+
+            blockOperations.append(
+                NSBlockOperation(block: { [weak self] in
+                    if let this = self {
+                        this.collectionView!.insertSections(NSIndexSet(index: sectionIndex))
+                    }
+                    })
+            )
+        }
+        else if type == NSFetchedResultsChangeType.Update {
+            print("Update Section: \(sectionIndex)")
+            blockOperations.append(
+                NSBlockOperation(block: { [weak self] in
+                    if let this = self {
+                        this.collectionView!.reloadSections(NSIndexSet(index: sectionIndex))
+                    }
+                    })
+            )
+        }
+        else if type == NSFetchedResultsChangeType.Delete {
+            print("Delete Section: \(sectionIndex)")
+
+            blockOperations.append(
+                NSBlockOperation(block: { [weak self] in
+                    if let this = self {
+                        this.collectionView!.deleteSections(NSIndexSet(index: sectionIndex))
+                    }
+                    })
+            )
+        }
+    }
+
+    // And finally, in the did controller did change content method:
+    func controllerDidChangeContent(controller: NSFetchedResultsController) {
+        collectionView!.performBatchUpdates({ () -> Void in
+            for operation: NSBlockOperation in self.blockOperations {
+                operation.start()
+            }
+            }, completion: { (finished) -> Void in
+                self.blockOperations.removeAll(keepCapacity: false)
+        })
+    }
+
+    deinit {
+        // Cancel all block operations when VC deallocates
+        for operation: NSBlockOperation in blockOperations {
+            operation.cancel()
+        }
+
+        blockOperations.removeAll(keepCapacity: false)
+    }
+    
 
     // MARK: Helpers
 
@@ -182,7 +293,7 @@ class PhotoAlbumViewController: UIViewController, UICollectionViewDelegate, UICo
         } else if bBoxLongMin < longMin {
             bBoxLongMin = longMax - (bBoxLongMin + longMin)
         }
-
+        
         return "\(bBoxLongMin),\(bBoxLatMin),\(bBoxLongMax),\(bBoxLatMax)"
     }
 }
