@@ -20,6 +20,12 @@ class Flickr : NSObject {
         super.init()
     }
 
+    // MARK: - Shared Image Cache
+
+    struct Caches {
+        static let imageCache = ImageCache()
+    }
+
 
     // MARK: - All purpose task method for data
 

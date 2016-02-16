@@ -31,4 +31,14 @@ class Photo: NSManagedObject {
         title = dictionary[Flickr.JSONKeys.Title] as! String
         imageUrl = dictionary[Flickr.JSONKeys.imageUrl] as! String
     }
+
+    var image: UIImage? {
+        get {
+            return Flickr.Caches.imageCache.imageWithIdentifier(imageUrl)
+        }
+
+        set {
+            Flickr.Caches.imageCache.storeImage(image, withIdentifier: imageUrl)
+        }
+    }
 }
