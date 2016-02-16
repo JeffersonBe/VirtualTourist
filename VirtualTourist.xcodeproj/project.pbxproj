@@ -8,6 +8,7 @@
 
 /* Begin PBXBuildFile section */
 		B41435771C6A6F170065D3C9 /* Main.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = B41435761C6A6F170065D3C9 /* Main.storyboard */; };
+		B43531E31C729793007DB5A8 /* ImageCache.swift in Sources */ = {isa = PBXBuildFile; fileRef = B43531E21C729793007DB5A8 /* ImageCache.swift */; };
 		B44078041C68B62E0023CC3B /* Flickr.swift in Sources */ = {isa = PBXBuildFile; fileRef = B44078031C68B62E0023CC3B /* Flickr.swift */; };
 		B44078061C68B75D0023CC3B /* FlickrConstant.swift in Sources */ = {isa = PBXBuildFile; fileRef = B44078051C68B75D0023CC3B /* FlickrConstant.swift */; };
 		B440780C1C68B8D30023CC3B /* Key.plist in Resources */ = {isa = PBXBuildFile; fileRef = B440780B1C68B8D30023CC3B /* Key.plist */; };
@@ -25,6 +26,7 @@
 
 /* Begin PBXFileReference section */
 		B41435761C6A6F170065D3C9 /* Main.storyboard */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = file.storyboard; path = Main.storyboard; sourceTree = "<group>"; };
+		B43531E21C729793007DB5A8 /* ImageCache.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ImageCache.swift; sourceTree = "<group>"; };
 		B44078031C68B62E0023CC3B /* Flickr.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Flickr.swift; sourceTree = "<group>"; };
 		B44078051C68B75D0023CC3B /* FlickrConstant.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = FlickrConstant.swift; sourceTree = "<group>"; };
 		B440780B1C68B8D30023CC3B /* Key.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; path = Key.plist; sourceTree = "<group>"; };
@@ -102,6 +104,7 @@
 				B4BBFE461C67F6F90000AE22 /* Pin.swift */,
 				B4BBFE481C67F81A0000AE22 /* Photo.swift */,
 				B4BBFE4A1C67F8990000AE22 /* CoreDataStackManager.swift */,
+				B43531E21C729793007DB5A8 /* ImageCache.swift */,
 			);
 			name = Models;
 			sourceTree = "<group>";
@@ -206,6 +209,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				B43531E31C729793007DB5A8 /* ImageCache.swift in Sources */,
 				B4BBFE331C67F5640000AE22 /* LocationMapViewController.swift in Sources */,
 				B4420AB11C69FD3A00C609AF /* CustomCollectionViewCell.swift in Sources */,
 				B4BBFE311C67F5640000AE22 /* AppDelegate.swift in Sources */,
