@@ -76,32 +76,33 @@ class LocationMapViewController: UIViewController, NSFetchedResultsControllerDel
         }
     }
 
-    func mapView(mapView: MKMapView, viewForAnnotation annotation: MKAnnotation) -> MKAnnotationView? {
-        let reuseId = "pin"
-        var pinView = mapView.dequeueReusableAnnotationViewWithIdentifier(reuseId) as? MKPinAnnotationView
-        if pinView == nil {
-            pinView = MKPinAnnotationView(annotation: annotation, reuseIdentifier: reuseId)
-            pinView?.draggable = true
-            pinView?.canShowCallout = false
-        }
-        else {
-            pinView?.annotation = annotation
-        }
-        
-        return pinView
-    }
-
-    func mapView(mapView: MKMapView, annotationView view: MKAnnotationView, didChangeDragState newState: MKAnnotationViewDragState, fromOldState oldState: MKAnnotationViewDragState) {
-        switch (newState) {
-        case .Starting:
-            view.dragState = .Dragging
-            print("Start")
-        case .Ending, .Canceling:
-            view.dragState = .None
-            print("Finish")
-        default: break
-        }
-    }
+    // TODO: - Implement drag functionality
+//    func mapView(mapView: MKMapView, viewForAnnotation annotation: MKAnnotation) -> MKAnnotationView? {
+//        let reuseId = "pin"
+//        var pinView = mapView.dequeueReusableAnnotationViewWithIdentifier(reuseId) as? MKPinAnnotationView
+//        if pinView == nil {
+//            pinView = MKPinAnnotationView(annotation: annotation, reuseIdentifier: reuseId)
+//            pinView?.draggable = true
+//            pinView?.canShowCallout = false
+//        }
+//        else {
+//            pinView?.annotation = annotation
+//        }
+//        
+//        return pinView
+//    }
+//
+//    func mapView(mapView: MKMapView, annotationView view: MKAnnotationView, didChangeDragState newState: MKAnnotationViewDragState, fromOldState oldState: MKAnnotationViewDragState) {
+//        switch (newState) {
+//        case .Starting:
+//            view.dragState = .Dragging
+//            print("Start")
+//        case .Ending, .Canceling:
+//            view.dragState = .None
+//            print("Finish")
+//        default: break
+//        }
+//    }
 
     // MARK: Helpers
 
