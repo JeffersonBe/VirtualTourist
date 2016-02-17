@@ -87,33 +87,24 @@ class LocationMapViewController: UIViewController, NSFetchedResultsControllerDel
 
     // MARK: Helpers
 
-    // Add Pin by using gestureRecognizer and translating Coordinate
     func addPin(gestureRecognizer: UIGestureRecognizer) {
-        //If the touch has now ended
-        if gestureRecognizer.state == .Began {
 
-            //Get the spot that was pressed.
+        if gestureRecognizer.state == .Began {
             let tapPoint: CGPoint = gestureRecognizer.locationInView(mapView)
             let touchMapCoordinate: CLLocationCoordinate2D = mapView.convertPoint(tapPoint, toCoordinateFromView: mapView)
             annotationPin.coordinate = touchMapCoordinate
 
-            //Add annotation to map
             dispatch_async(dispatch_get_main_queue(), {
                 self.mapView.addAnnotation(self.annotationPin)
             })
         }
 
-            //If the touch has moved / changed once the touch has began
         else if gestureRecognizer.state == .Changed {
 
-            //Check to make sure the pin has dropped
-
-                //Get the coordinates from the map where we dragged over
                 let tapPoint: CGPoint = gestureRecognizer.locationInView(mapView)
                 let touchMapCoordinate: CLLocationCoordinate2D = mapView.convertPoint(tapPoint, toCoordinateFromView: mapView)
             annotationPin.coordinate = touchMapCoordinate
 
-                //Update the pin view
                 dispatch_async(dispatch_get_main_queue(), {
                     self.annotationPin.coordinate = touchMapCoordinate
                 })

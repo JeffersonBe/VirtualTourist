@@ -22,7 +22,7 @@
             </objects>
             <point key="canvasLocation" x="-169" y="354"/>
         </scene>
-        <!--Location Map View Controller-->
+        <!--Virtual Tourist-->
         <scene sceneID="1tT-Tg-Tfd">
             <objects>
                 <viewController storyboardIdentifier="LocationMapViewController" id="XKZ-J6-BFD" customClass="LocationMapViewController" customModule="VirtualTourist" customModuleProvider="target" sceneMemberID="viewController">
@@ -46,7 +46,7 @@
                             <constraint firstItem="MIU-94-z0q" firstAttribute="top" secondItem="XJz-uS-fjg" secondAttribute="bottom" id="WKH-ue-uEk"/>
                         </constraints>
                     </view>
-                    <navigationItem key="navigationItem" id="v2c-Bd-MtF"/>
+                    <navigationItem key="navigationItem" title="Virtual Tourist" id="v2c-Bd-MtF"/>
                     <connections>
                         <outlet property="mapView" destination="MIU-94-z0q" id="9Cj-Qg-U0y"/>
                         <segue destination="oFg-hz-peW" kind="showDetail" identifier="SegueToPhotoAlbumViewController" id="4TT-l2-sbX"/>
@@ -99,7 +99,11 @@
                                 </constraints>
                                 <items>
                                     <barButtonItem style="plain" systemItem="flexibleSpace" id="QwF-oO-2Gu"/>
-                                    <barButtonItem title="Item" id="vDE-cM-NaW"/>
+                                    <barButtonItem title="New Collection" id="vDE-cM-NaW">
+                                        <connections>
+                                            <action selector="toolbarButtonAction:" destination="oFg-hz-peW" id="xdN-64-rIK"/>
+                                        </connections>
+                                    </barButtonItem>
                                     <barButtonItem style="plain" systemItem="flexibleSpace" id="v93-9m-r7E"/>
                                 </items>
                             </toolbar>
