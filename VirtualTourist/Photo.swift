@@ -41,4 +41,8 @@ class Photo: NSManagedObject {
             Flickr.Caches.imageCache.storeImage(image, withIdentifier: imageUrl)
         }
     }
+
+    override func prepareForDeletion() {
+        Flickr.Caches.imageCache.deleteCache(imageUrl)
+    }
 }
