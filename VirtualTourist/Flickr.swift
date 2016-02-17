@@ -141,4 +141,34 @@ class Flickr : NSObject {
 
         return (!urlVars.isEmpty ? "?" : "") + urlVars.joinWithSeparator("&")
     }
+
+    func calculateBboxParameters(latitude: Double, longitude: Double) -> String {
+        let latMin = -90.0
+        let latMax = 90.0
+        let longMin = -180.0
+        let longMax = 180.0
+
+        let bboxEdge = 0.1
+
+        var bBoxLatMin = latitude - bboxEdge
+        var bBoxLongMin = longitude - bboxEdge
+        var bBoxLatMax = latitude + bboxEdge
+        var bBoxLongMax = longitude + bboxEdge
+
+        if bBoxLatMax > latMax {
+            bBoxLatMax = latMax
+            bBoxLatMin = latMax - bboxEdge
+        } else if bBoxLatMin < latMin {
+            bBoxLatMin = latMin
+            bBoxLatMax = latMax - bboxEdge
+        }
+
+        if bBoxLongMax > longMax {
+            bBoxLongMax = (bBoxLongMax - longMax) + longMin
+        } else if bBoxLongMin < longMin {
+            bBoxLongMin = longMax - (bBoxLongMin + longMin)
+        }
+
+        return "\(bBoxLongMin),\(bBoxLatMin),\(bBoxLongMax),\(bBoxLatMax)"
+    }
 }

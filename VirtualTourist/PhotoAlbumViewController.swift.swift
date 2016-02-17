@@ -16,8 +16,10 @@ class PhotoAlbumViewController: UIViewController, UICollectionViewDelegate, UICo
     @IBOutlet weak var collectionView: UICollectionView!
     @IBOutlet weak var toolBar: UIToolbar!
     @IBOutlet weak var toolBarButton: UIBarButtonItem!
+    @IBOutlet weak var statusPhotoLabel: UILabel!
 
     var selectedPin: Pin!
+    var resultCount: Int?
     var arrayPhotoToDelete: [NSIndexPath] = []
 
     override func viewDidLoad() {
@@ -36,12 +38,16 @@ class PhotoAlbumViewController: UIViewController, UICollectionViewDelegate, UICo
 
         do {
             try fetchedResultsController.performFetch()
-        } catch {}
+        } catch {
+            print("Error")
+        }
 
         fetchedResultsController.delegate = self
 
-        if fetchedResultsController.fetchedObjects?.count == 0 {
-            loadPhotos(selectedPin)
+        if resultCount == 0 || resultCount == nil {
+            statusPhotoLabel.hidden = false
+            statusPhotoLabel.text = "Cannot find Photos in this location"
+            toolBarButton.enabled = false
         }
     }
 
@@ -120,7 +126,6 @@ class PhotoAlbumViewController: UIViewController, UICollectionViewDelegate, UICo
     }
 
     func updateToolbar() {
-        print(arrayPhotoToDelete)
         if arrayPhotoToDelete.count >= 1 {
             toolBarButton.title = "Remove Selected Pictures"
         } else {
@@ -210,7 +215,6 @@ class PhotoAlbumViewController: UIViewController, UICollectionViewDelegate, UICo
     func controller(controller: NSFetchedResultsController, didChangeSection sectionInfo: NSFetchedResultsSectionInfo, atIndex sectionIndex: Int, forChangeType type: NSFetchedResultsChangeType) {
 
         if type == NSFetchedResultsChangeType.Insert {
-            print("Insert Section: \(sectionIndex)")
 
             blockOperations.append(
                 NSBlockOperation(block: { [weak self] in
@@ -221,7 +225,6 @@ class PhotoAlbumViewController: UIViewController, UICollectionViewDelegate, UICo
             )
         }
         else if type == NSFetchedResultsChangeType.Update {
-            print("Update Section: \(sectionIndex)")
             blockOperations.append(
                 NSBlockOperation(block: { [weak self] in
                     if let this = self {
@@ -231,8 +234,6 @@ class PhotoAlbumViewController: UIViewController, UICollectionViewDelegate, UICo
             )
         }
         else if type == NSFetchedResultsChangeType.Delete {
-            print("Delete Section: \(sectionIndex)")
-
             blockOperations.append(
                 NSBlockOperation(block: { [weak self] in
                     if let this = self {
@@ -242,7 +243,6 @@ class PhotoAlbumViewController: UIViewController, UICollectionViewDelegate, UICo
             )
         }
     }
-
 
     func controllerDidChangeContent(controller: NSFetchedResultsController) {
         collectionView!.performBatchUpdates({ () -> Void in
@@ -275,7 +275,7 @@ class PhotoAlbumViewController: UIViewController, UICollectionViewDelegate, UICo
         let parameters: [String:AnyObject] = [
             "method": Flickr.Resources.SearchPhotos,
             "api_key": Flickr.Constants.ApiKey!,
-            "bbox": calculateBboxParameters(annotation.coordinate.latitude, longitude: annotation.coordinate.longitude),
+            "bbox": Flickr.sharedInstance.calculateBboxParameters(annotation.coordinate.latitude, longitude: annotation.coordinate.longitude),
             "extras": Flickr.Keys.Extras,
             "format": Flickr.Keys.Format,
             "nojsoncallback": Flickr.Keys.No_json_Callback,
@@ -305,35 +305,5 @@ class PhotoAlbumViewController: UIViewController, UICollectionViewDelegate, UICo
             // Save managed object context
             CoreDataStackManager.sharedInstance.saveContext()
         }
-    }
-
-    func calculateBboxParameters(latitude: Double, longitude: Double) -> String {
-        let latMin = -90.0
-        let latMax = 90.0
-        let longMin = -180.0
-        let longMax = 180.0
-
-        let bboxEdge = 0.1
-
-        var bBoxLatMin = latitude - bboxEdge
-        var bBoxLongMin = longitude - bboxEdge
-        var bBoxLatMax = latitude + bboxEdge
-        var bBoxLongMax = longitude + bboxEdge
-
-        if bBoxLatMax > latMax {
-            bBoxLatMax = latMax
-            bBoxLatMin = latMax - bboxEdge
-        } else if bBoxLatMin < latMin {
-            bBoxLatMin = latMin
-            bBoxLatMax = latMax - bboxEdge
-        }
-
-        if bBoxLongMax > longMax {
-            bBoxLongMax = (bBoxLongMax - longMax) + longMin
-        } else if bBoxLongMin < longMin {
-            bBoxLongMin = longMax - (bBoxLongMin + longMin)
-        }
-        
-        return "\(bBoxLongMin),\(bBoxLatMin),\(bBoxLongMax),\(bBoxLatMax)"
     }
 }

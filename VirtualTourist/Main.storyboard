@@ -92,6 +92,12 @@
                                     <outlet property="delegate" destination="oFg-hz-peW" id="wRe-38-KWf"/>
                                 </connections>
                             </collectionView>
+                            <label hidden="YES" opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="Label" textAlignment="natural" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="NLL-Au-QJh">
+                                <rect key="frame" x="279" y="332" width="42" height="21"/>
+                                <fontDescription key="fontDescription" type="system" pointSize="17"/>
+                                <color key="textColor" cocoaTouchSystemColor="darkTextColor"/>
+                                <nil key="highlightedColor"/>
+                            </label>
                             <toolbar opaque="NO" clearsContextBeforeDrawing="NO" contentMode="scaleToFill" translatesAutoresizingMaskIntoConstraints="NO" id="GpT-b6-uqm">
                                 <rect key="frame" x="0.0" y="556" width="600" height="44"/>
                                 <constraints>
@@ -119,16 +125,19 @@
                             <constraint firstItem="GpT-b6-uqm" firstAttribute="top" secondItem="SEd-kX-dFd" secondAttribute="bottom" id="QKC-re-Sf8"/>
                             <constraint firstAttribute="trailingMargin" secondItem="SEd-kX-dFd" secondAttribute="trailing" constant="-20" id="UJh-wO-ggV"/>
                             <constraint firstItem="SEd-kX-dFd" firstAttribute="top" secondItem="Tr4-gj-N7e" secondAttribute="bottom" constant="8" id="WEE-YQ-vi0"/>
+                            <constraint firstItem="NLL-Au-QJh" firstAttribute="centerX" secondItem="SEd-kX-dFd" secondAttribute="centerX" id="c1P-O3-IsH"/>
                             <constraint firstAttribute="trailingMargin" secondItem="GpT-b6-uqm" secondAttribute="trailing" constant="-20" id="ckc-xz-eVe"/>
                             <constraint firstItem="Tr4-gj-N7e" firstAttribute="height" secondItem="oFF-05-MlV" secondAttribute="height" constant="-500" id="jiw-BI-wg4"/>
                             <constraint firstAttribute="trailingMargin" secondItem="Tr4-gj-N7e" secondAttribute="trailing" constant="-20" id="uk2-CC-nFY"/>
                             <constraint firstItem="SEd-kX-dFd" firstAttribute="leading" secondItem="oFF-05-MlV" secondAttribute="leadingMargin" constant="-20" id="xIc-ge-3yc"/>
+                            <constraint firstItem="NLL-Au-QJh" firstAttribute="centerY" secondItem="SEd-kX-dFd" secondAttribute="centerY" id="yjk-uE-UTt"/>
                             <constraint firstItem="Tr4-gj-N7e" firstAttribute="top" secondItem="Rvq-z4-x1P" secondAttribute="bottom" id="zgL-JP-5PA"/>
                         </constraints>
                     </view>
                     <connections>
                         <outlet property="collectionView" destination="SEd-kX-dFd" id="1Wj-Ic-QNU"/>
                         <outlet property="mapView" destination="Tr4-gj-N7e" id="dX1-0S-qb1"/>
+                        <outlet property="statusPhotoLabel" destination="NLL-Au-QJh" id="TXb-hE-7ov"/>
                         <outlet property="toolBar" destination="GpT-b6-uqm" id="cE7-Fm-V3X"/>
                         <outlet property="toolBarButton" destination="vDE-cM-NaW" id="j0L-yw-bjt"/>
                     </connections>
