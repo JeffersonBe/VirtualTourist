@@ -32,4 +32,14 @@ extension Flickr {
         static let Title = "title"
         static let imageUrl = "url_m"
     }
+
+    struct AppCopy {
+        static let deleteSelectedPictures = "Delete Selected Pictures"
+        static let newCollection = "New Collection"
+        static let noPhotosFoundInCollection = "No photos found for this location"
+    }
+
+    struct CellIdentifier {
+        static let CollectionViewCellWithReuseIdentifier = "CollectionViewCell"
+    }
 }

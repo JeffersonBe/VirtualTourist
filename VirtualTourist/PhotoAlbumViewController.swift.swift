@@ -10,7 +10,9 @@ import UIKit
 import MapKit
 import CoreData
 
-class PhotoAlbumViewController: UIViewController, UICollectionViewDelegate, UICollectionViewDelegateFlowLayout, NSFetchedResultsControllerDelegate {
+class PhotoAlbumViewController: UIViewController, UICollectionViewDelegateFlowLayout {
+
+    // MARK: - Properties
 
     @IBOutlet weak var mapView: MKMapView!
     @IBOutlet weak var collectionView: UICollectionView!
@@ -21,12 +23,18 @@ class PhotoAlbumViewController: UIViewController, UICollectionViewDelegate, UICo
     var selectedPin: Pin!
     var arrayPhotoToDelete: [NSIndexPath] = []
 
+    // MARK: - Initialization
     override func viewDidLoad() {
         super.viewDidLoad()
+
         showMap(selectedPin)
 
+        // Initialize delegate
         collectionView.delegate = self
-        collectionView!.registerClass(CustomCollectionViewCell.self,forCellWithReuseIdentifier: "CollectionViewCell")
+        fetchedResultsController.delegate = self
+
+        // Configure CollectionView
+        collectionView!.registerClass(CustomCollectionViewCell.self,forCellWithReuseIdentifier: Flickr.CellIdentifier.CollectionViewCellWithReuseIdentifier)
         collectionView.backgroundColor = UIColor.clearColor()
         collectionView.allowsMultipleSelection = true
 
@@ -41,17 +49,20 @@ class PhotoAlbumViewController: UIViewController, UICollectionViewDelegate, UICo
         } catch let error as NSError {
             print("Error: \(error.localizedDescription)")
         }
-        fetchedResultsController.delegate = self
     }
 
     override func viewDidAppear(animated: Bool) {
         super.viewWillAppear(true)
+
+        // Check if fetchedResultsController returned objects
         if fetchedResultsController.fetchedObjects!.count == 0 {
             statusPhotoLabel.hidden = false
-            statusPhotoLabel.text = "DDDGHERFG"
+            statusPhotoLabel.text = Flickr.AppCopy.noPhotosFoundInCollection
             toolBarButton.enabled = false
         }
     }
+
+    // Initialize CoreData and NSFetchedResultsController
 
     var sharedContext: NSManagedObjectContext {
         return CoreDataStackManager.sharedInstance.managedObjectContext
@@ -73,7 +84,7 @@ class PhotoAlbumViewController: UIViewController, UICollectionViewDelegate, UICo
     }()
 
     @IBAction func toolbarButtonAction(sender: AnyObject) {
-        if toolBarButton.title == "New Collection" {
+        if toolBarButton.title == Flickr.AppCopy.newCollection {
             for photo in fetchedResultsController.fetchedObjects!{
                 sharedContext.deleteObject(photo as! NSManagedObject)
             }
@@ -88,45 +99,12 @@ class PhotoAlbumViewController: UIViewController, UICollectionViewDelegate, UICo
             updateToolbar()
         }
     }
-    // MARK: CollectionView delegate
-
-    func collectionView(collectionView: UICollectionView, numberOfItemsInSection section: Int) -> Int {
-        let sectionInfo = fetchedResultsController.sections![section] as NSFetchedResultsSectionInfo
-        return sectionInfo.numberOfObjects
-    }
-
-    func collectionView(collectionView: UICollectionView, cellForItemAtIndexPath indexPath: NSIndexPath) -> UICollectionViewCell {
-        let photo = fetchedResultsController.objectAtIndexPath(indexPath) as! Photo
-        let cell = collectionView.dequeueReusableCellWithReuseIdentifier("CollectionViewCell", forIndexPath: indexPath) as! CustomCollectionViewCell
-        cell.clipsToBounds = true
-        cell.alpha = 0.0
-        configureCell(cell, withPhoto: photo)
-        return cell
-    }
-
-    func collectionView(collectionView: UICollectionView, didSelectItemAtIndexPath indexPath: NSIndexPath) {
-        let cell = collectionView.cellForItemAtIndexPath(indexPath)
-        UIView.animateWithDuration(0.1, delay: 0.0, options: UIViewAnimationOptions.CurveEaseOut, animations: {
-            cell?.alpha = 0.5
-            }, completion: nil)
-        arrayPhotoToDelete.append(indexPath)
-        updateToolbar()
-    }
-
-    func collectionView(collectionView: UICollectionView, didDeselectItemAtIndexPath indexPath: NSIndexPath) {
-        let cell = collectionView.cellForItemAtIndexPath(indexPath)
-        UIView.animateWithDuration(0.1, delay: 0.0, options: UIViewAnimationOptions.CurveEaseOut, animations: {
-            cell?.alpha = 1.0
-            }, completion: nil)
-        arrayPhotoToDelete.removeAtIndex(arrayPhotoToDelete.indexOf(indexPath)!)
-        updateToolbar()
-    }
 
     func updateToolbar() {
         if arrayPhotoToDelete.count >= 1 {
-            toolBarButton.title = "Remove Selected Pictures"
+            toolBarButton.title = Flickr.AppCopy.deleteSelectedPictures
         } else {
-            toolBarButton.title = "New Collection"
+            toolBarButton.title = Flickr.AppCopy.newCollection
         }
     }
 
@@ -152,6 +130,63 @@ class PhotoAlbumViewController: UIViewController, UICollectionViewDelegate, UICo
         }
     }
 
+    // MARK: - Helpers
+
+    func showMap(annotation: MKAnnotation) {
+        mapView.showAnnotations([annotation], animated: true)
+    }
+
+    func loadPhotos(annotation: MKAnnotation) {
+        Flickr.sharedInstance.loadPin(annotation as! Pin) { (success, error) -> Void in}
+    }
+
+    // MARK: - NSFetchedResultsController related property
+    var blockOperations: [NSBlockOperation] = []
+
+    deinit {
+        // Cancel all block operations when VC deallocates
+        for operation: NSBlockOperation in blockOperations {
+            operation.cancel()
+        }
+
+        blockOperations.removeAll(keepCapacity: false)
+    }
+}
+
+extension PhotoAlbumViewController: UICollectionViewDelegate {
+
+    func collectionView(collectionView: UICollectionView, numberOfItemsInSection section: Int) -> Int {
+        let sectionInfo = fetchedResultsController.sections![section] as NSFetchedResultsSectionInfo
+        return sectionInfo.numberOfObjects
+    }
+
+    func collectionView(collectionView: UICollectionView, cellForItemAtIndexPath indexPath: NSIndexPath) -> UICollectionViewCell {
+        let photo = fetchedResultsController.objectAtIndexPath(indexPath) as! Photo
+        let cell = collectionView.dequeueReusableCellWithReuseIdentifier(Flickr.CellIdentifier.CollectionViewCellWithReuseIdentifier, forIndexPath: indexPath) as! CustomCollectionViewCell
+        cell.clipsToBounds = true
+        cell.alpha = 0.0
+        configureCell(cell, withPhoto: photo)
+        return cell
+    }
+
+    func collectionView(collectionView: UICollectionView, didSelectItemAtIndexPath indexPath: NSIndexPath) {
+        let cell = collectionView.cellForItemAtIndexPath(indexPath)
+        UIView.animateWithDuration(0.1, delay: 0.0, options: UIViewAnimationOptions.CurveEaseOut, animations: {
+            cell?.alpha = 0.5
+            }, completion: nil)
+        arrayPhotoToDelete.append(indexPath)
+        updateToolbar()
+    }
+
+    func collectionView(collectionView: UICollectionView, didDeselectItemAtIndexPath indexPath: NSIndexPath) {
+        let cell = collectionView.cellForItemAtIndexPath(indexPath)
+        UIView.animateWithDuration(0.1, delay: 0.0, options: UIViewAnimationOptions.CurveEaseOut, animations: {
+            cell?.alpha = 1.0
+            }, completion: nil)
+        arrayPhotoToDelete.removeAtIndex(arrayPhotoToDelete.indexOf(indexPath)!)
+        updateToolbar()
+    }
+
     func collectionView(collectionView: UICollectionView,
         layout collectionViewLayout: UICollectionViewLayout,
         sizeForItemAtIndexPath indexPath: NSIndexPath) -> CGSize {
@@ -163,11 +198,12 @@ class PhotoAlbumViewController: UIViewController, UICollectionViewDelegate, UICo
         insetForSectionAtIndex section: Int) -> UIEdgeInsets {
             return UIEdgeInsetsZero
     }
+}
 
+extension PhotoAlbumViewController: NSFetchedResultsControllerDelegate {
     // MARK: NSFetchedResultsController delegate
     // Used GIST: https://gist.github.com/AppsTitude/ce072627c61ea3999b8d#file-uicollection-and-nsfetchedresultscontrollerdelegate-integration-swift-L78
 
-    var blockOperations: [NSBlockOperation] = []
 
     func controller(controller: NSFetchedResultsController, didChangeObject anObject: AnyObject, atIndexPath indexPath: NSIndexPath?, forChangeType type: NSFetchedResultsChangeType, newIndexPath: NSIndexPath?) {
 
@@ -249,25 +285,5 @@ class PhotoAlbumViewController: UIViewController, UICollectionViewDelegate, UICo
             }, completion: { (finished) -> Void in
                 self.blockOperations.removeAll(keepCapacity: false)
         })
-    }
-
-    deinit {
-        // Cancel all block operations when VC deallocates
-        for operation: NSBlockOperation in blockOperations {
-            operation.cancel()
-        }
-
-        blockOperations.removeAll(keepCapacity: false)
-    }
-    
-
-    // MARK: Helpers
-
-    func showMap(annotation: MKAnnotation) {
-        mapView.showAnnotations([annotation], animated: true)
-    }
-
-    func loadPhotos(annotation: MKAnnotation) {
-        Flickr.sharedInstance.loadPin(annotation as! Pin) { (success, error) -> Void in}
     }
 }

@@ -10,17 +10,21 @@ import UIKit
 import MapKit
 import CoreData
 
-class LocationMapViewController: UIViewController, NSFetchedResultsControllerDelegate, MKMapViewDelegate {
+class LocationMapViewController: UIViewController {
 
+    // MARK: - Properties
     @IBOutlet weak var mapView: MKMapView!
     var annotationPin = MKPointAnnotation()
 
+    // MARK: - Initialization
     override func viewDidLoad() {
         super.viewDidLoad()
-        // Do any additional setup after loading the view, typically from a nib.
 
+        // Initialize delegate
         mapView.delegate = self
+        fetchedResultsController.delegate = self
 
+        // Gesture recognizer to drop pin on map
         let longTap: UILongPressGestureRecognizer = UILongPressGestureRecognizer(target: self, action: "addPin:")
         longTap.minimumPressDuration = 0.5
         mapView.addGestureRecognizer(longTap)
@@ -29,10 +33,11 @@ class LocationMapViewController: UIViewController, NSFetchedResultsControllerDel
             try fetchedResultsController.performFetch()
         } catch {}
 
-        fetchedResultsController.delegate = self
+        // Load Pin on mapView
         mapView.addAnnotations(fetchedResultsController.fetchedObjects as! [Pin])
     }
 
+    // Initialize CoreData and NSFetchedResultsController
     var sharedContext: NSManagedObjectContext {
         return CoreDataStackManager.sharedInstance.managedObjectContext
     }
@@ -49,6 +54,59 @@ class LocationMapViewController: UIViewController, NSFetchedResultsControllerDel
 
         return fetchedResultsController
     }()
+
+    // MARK: Helpers
+
+    func addPin(gestureRecognizer: UIGestureRecognizer) {
+
+        if gestureRecognizer.state == .Began {
+            let tapPoint: CGPoint = gestureRecognizer.locationInView(mapView)
+            let touchMapCoordinate: CLLocationCoordinate2D = mapView.convertPoint(tapPoint, toCoordinateFromView: mapView)
+            annotationPin.coordinate = touchMapCoordinate
+
+            dispatch_async(dispatch_get_main_queue(), {
+                self.mapView.addAnnotation(self.annotationPin)
+            })
+        }
+
+        else if gestureRecognizer.state == .Changed {
+
+            let tapPoint: CGPoint = gestureRecognizer.locationInView(mapView)
+            let touchMapCoordinate: CLLocationCoordinate2D = mapView.convertPoint(tapPoint, toCoordinateFromView: mapView)
+            annotationPin.coordinate = touchMapCoordinate
+
+            dispatch_async(dispatch_get_main_queue(), {
+                self.annotationPin.coordinate = touchMapCoordinate
+            })
+        }
+
+        // When the Pin is drop when can add it to Core Data
+        if gestureRecognizer.state == .Ended {
+
+            let tapPoint: CGPoint = gestureRecognizer.locationInView(mapView)
+            let touchMapCoordinate: CLLocationCoordinate2D = mapView.convertPoint(tapPoint, toCoordinateFromView: mapView)
+
+            let pin = Pin(latitude: touchMapCoordinate.latitude, longitude: touchMapCoordinate.longitude, context: sharedContext)
+            CoreDataStackManager.sharedInstance.saveContext()
+
+            Flickr.sharedInstance.loadPin(pin) { (success, error) -> Void in }
+            showPhotoAlbum(pin)
+        }
+    }
+
+    func showPhotoAlbum(pin: Pin) {
+        let nextView = self.storyboard?.instantiateViewControllerWithIdentifier("PhotoAlbumViewController") as! PhotoAlbumViewController
+        nextView.selectedPin = pin
+        self.navigationController?.pushViewController(nextView, animated: true)
+    }
+
+    func updatePin(pin: Pin) {
+        mapView.removeAnnotation(pin)
+        mapView.addAnnotation(pin)
+    }
+}
+
+extension LocationMapViewController: MKMapViewDelegate {
 
     // MARK: Mapkit Delegate
 
@@ -83,52 +141,9 @@ class LocationMapViewController: UIViewController, NSFetchedResultsControllerDel
     //        default: break
     //        }
     //    }
+}
 
-    // MARK: Helpers
-
-    func addPin(gestureRecognizer: UIGestureRecognizer) {
-
-        if gestureRecognizer.state == .Began {
-            let tapPoint: CGPoint = gestureRecognizer.locationInView(mapView)
-            let touchMapCoordinate: CLLocationCoordinate2D = mapView.convertPoint(tapPoint, toCoordinateFromView: mapView)
-            annotationPin.coordinate = touchMapCoordinate
-
-            dispatch_async(dispatch_get_main_queue(), {
-                self.mapView.addAnnotation(self.annotationPin)
-            })
-        }
-
-        else if gestureRecognizer.state == .Changed {
-
-            let tapPoint: CGPoint = gestureRecognizer.locationInView(mapView)
-            let touchMapCoordinate: CLLocationCoordinate2D = mapView.convertPoint(tapPoint, toCoordinateFromView: mapView)
-            annotationPin.coordinate = touchMapCoordinate
-
-            dispatch_async(dispatch_get_main_queue(), {
-                self.annotationPin.coordinate = touchMapCoordinate
-            })
-        }
-
-        if gestureRecognizer.state == .Ended {
-
-            let tapPoint: CGPoint = gestureRecognizer.locationInView(mapView)
-            let touchMapCoordinate: CLLocationCoordinate2D = mapView.convertPoint(tapPoint, toCoordinateFromView: mapView)
-
-            let pin = Pin(latitude: touchMapCoordinate.latitude, longitude: touchMapCoordinate.longitude, context: sharedContext)
-            CoreDataStackManager.sharedInstance.saveContext()
-
-            Flickr.sharedInstance.loadPin(pin) { (success, error) -> Void in }
-            showPhotoAlbum(pin)
-        }
-    }
-
-    func showPhotoAlbum(pin: Pin) {
-        let nextView = self.storyboard?.instantiateViewControllerWithIdentifier("PhotoAlbumViewController") as! PhotoAlbumViewController
-        nextView.selectedPin = pin
-        self.navigationController?.pushViewController(nextView, animated: true)
-    }
-
-    // MARK: NSFetchedResultsController delegate
+extension LocationMapViewController: NSFetchedResultsControllerDelegate {
 
     func controller(controller: NSFetchedResultsController, didChangeObject anObject: AnyObject, atIndexPath indexPath: NSIndexPath?, forChangeType type: NSFetchedResultsChangeType, newIndexPath: NSIndexPath?) {
         switch (type){
@@ -137,7 +152,8 @@ class LocationMapViewController: UIViewController, NSFetchedResultsControllerDel
         case .Delete:
             mapView.removeAnnotation(anObject as! Pin)
         case .Update:
-            updatePin(anObject as! Pin)
+            mapView.removeAnnotation(anObject as! Pin)
+            mapView.addAnnotation(anObject as! Pin)
         case .Move:
             return
         }
@@ -145,10 +161,5 @@ class LocationMapViewController: UIViewController, NSFetchedResultsControllerDel
 
     func controllerDidChangeContent(controller: NSFetchedResultsController) {
         mapView.reloadInputViews()
-    }
-
-    func updatePin(pin: Pin) {
-        mapView.removeAnnotation(pin)
-        mapView.addAnnotation(pin)
     }
 }
