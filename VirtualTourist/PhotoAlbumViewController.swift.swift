@@ -19,11 +19,11 @@ class PhotoAlbumViewController: UIViewController, UICollectionViewDelegate, UICo
     @IBOutlet weak var statusPhotoLabel: UILabel!
 
     var selectedPin: Pin!
-    var resultCount: Int?
     var arrayPhotoToDelete: [NSIndexPath] = []
 
     override func viewDidLoad() {
         super.viewDidLoad()
+        showMap(selectedPin)
 
         collectionView.delegate = self
         collectionView!.registerClass(CustomCollectionViewCell.self,forCellWithReuseIdentifier: "CollectionViewCell")
@@ -38,22 +38,19 @@ class PhotoAlbumViewController: UIViewController, UICollectionViewDelegate, UICo
 
         do {
             try fetchedResultsController.performFetch()
-        } catch {
-            print("Error")
+        } catch let error as NSError {
+            print("Error: \(error.localizedDescription)")
         }
-
         fetchedResultsController.delegate = self
-
-        if resultCount == 0 || resultCount == nil {
-            statusPhotoLabel.hidden = false
-            statusPhotoLabel.text = "Cannot find Photos in this location"
-            toolBarButton.enabled = false
-        }
     }
 
     override func viewDidAppear(animated: Bool) {
         super.viewWillAppear(true)
-        showMap(selectedPin)
+        if fetchedResultsController.fetchedObjects!.count == 0 {
+            statusPhotoLabel.hidden = false
+            statusPhotoLabel.text = "DDDGHERFG"
+            toolBarButton.enabled = false
+        }
     }
 
     var sharedContext: NSManagedObjectContext {
@@ -271,39 +268,6 @@ class PhotoAlbumViewController: UIViewController, UICollectionViewDelegate, UICo
     }
 
     func loadPhotos(annotation: MKAnnotation) {
-
-        let parameters: [String:AnyObject] = [
-            "method": Flickr.Resources.SearchPhotos,
-            "api_key": Flickr.Constants.ApiKey!,
-            "bbox": Flickr.sharedInstance.calculateBboxParameters(annotation.coordinate.latitude, longitude: annotation.coordinate.longitude),
-            "extras": Flickr.Keys.Extras,
-            "format": Flickr.Keys.Format,
-            "nojsoncallback": Flickr.Keys.No_json_Callback,
-            "page": Int(arc4random_uniform(5)),
-            "per_page": 30
-        ]
-
-        Flickr.sharedInstance.taskForResource(parameters) { parsedResult, error in
-
-            // Handle the error case
-            if let error = error {
-                print("Error searching for Images: \(error.localizedDescription)")
-                return
-            }
-            guard let photosDictionary = parsedResult["photos"] as? NSDictionary,
-                photoArray = photosDictionary["photo"] as? [[String: AnyObject]] else {
-                    print("Cannot find keys 'photos' and 'photo' in \(parsedResult)")
-                    return
-            }
-
-            let _ = photoArray.map() { (dictionary: [String: AnyObject]) -> Photo in
-                let photo = Photo(dictionary: dictionary, context: self.sharedContext)
-                photo.locations = self.selectedPin
-                return photo
-            }
-
-            // Save managed object context
-            CoreDataStackManager.sharedInstance.saveContext()
-        }
+        Flickr.sharedInstance.loadPin(annotation as! Pin) { (success, error) -> Void in}
     }
 }

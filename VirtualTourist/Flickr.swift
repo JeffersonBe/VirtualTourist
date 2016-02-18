@@ -7,6 +7,7 @@
 //
 
 import Foundation
+import UIKit
 
 class Flickr : NSObject {
 
@@ -51,6 +52,48 @@ class Flickr : NSObject {
     }
 
     // MARK: - All purpose task method for images
+
+    func loadPin(pin: Pin, completionHandler: (success: Bool, error: NSError?) -> Void) {
+
+        let parameters: [String:AnyObject] = [
+            "method": Flickr.Resources.SearchPhotos,
+            "api_key": Flickr.Constants.ApiKey!,
+            "bbox": Flickr.sharedInstance.calculateBboxParameters(pin.latitude, longitude: pin.longitude),
+            "extras": Flickr.Keys.Extras,
+            "format": Flickr.Keys.Format,
+            "nojsoncallback": Flickr.Keys.No_json_Callback,
+            "page": Int(arc4random_uniform(10)),
+            "per_page": 30
+        ]
+
+        Flickr.sharedInstance.taskForResource(parameters) { parsedResult, error in
+
+            if let error = error {
+                print("Error searching for Images: \(error.localizedDescription)")
+                return completionHandler(success: false, error: error)
+            }
+
+            guard let photosDictionary = parsedResult["photos"] as? NSDictionary,
+            let photoArray = photosDictionary["photo"] as? [[String: AnyObject]] else {
+                return completionHandler(success: false, error: error)
+            }
+
+            guard photosDictionary["total"]! as? Int != 0 else {
+                return completionHandler(success: false, error: error)
+            }
+
+            dispatch_async(dispatch_get_global_queue(QOS_CLASS_BACKGROUND, 0)) {
+                let _ = photoArray.map() { (dictionary: [String: AnyObject]) -> Photo in
+                    let photo = Photo(dictionary: dictionary, context: CoreDataStackManager.sharedInstance.managedObjectContext)
+                    photo.locations = pin
+                    return photo
+                }
+                CoreDataStackManager.sharedInstance.saveContext()
+            }
+            
+            return completionHandler(success: true, error: error)
+        }
+    }
 
     func taskForImage(filePath: String, completionHandler: (imageData: NSData?, error: NSError?) ->  Void) -> NSURLSessionTask {
 

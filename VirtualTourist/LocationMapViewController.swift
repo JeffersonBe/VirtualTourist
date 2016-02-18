@@ -53,56 +53,36 @@ class LocationMapViewController: UIViewController, NSFetchedResultsControllerDel
     // MARK: Mapkit Delegate
 
     func mapView(mapView: MKMapView, didSelectAnnotationView view: MKAnnotationView){
-        if ((view.annotation?.isKindOfClass(Pin)) != nil) {
-            let fetchedPhotoResultsController: NSFetchedResultsController = {
-
-                let fetchRequest = NSFetchRequest(entityName: "Photo")
-                fetchRequest.predicate = NSPredicate(format: "locations == %@", view.annotation as! Pin)
-                fetchRequest.sortDescriptors = [NSSortDescriptor(key: "title", ascending: true)]
-
-                let fetchedResultsController = NSFetchedResultsController(fetchRequest: fetchRequest,
-                    managedObjectContext: self.sharedContext,
-                    sectionNameKeyPath: nil,
-                    cacheName: nil)
-                
-                return fetchedResultsController
-            }()
-
-            do {
-                try fetchedPhotoResultsController.performFetch()
-            } catch {}
-
-            showPhotoAlbum(view.annotation as! Pin, resultCount: fetchedPhotoResultsController.fetchedObjects?.count)
-        }
+        showPhotoAlbum(view.annotation as! Pin)
     }
 
     // TODO: - Implement drag functionality
-//    func mapView(mapView: MKMapView, viewForAnnotation annotation: MKAnnotation) -> MKAnnotationView? {
-//        let reuseId = "pin"
-//        var pinView = mapView.dequeueReusableAnnotationViewWithIdentifier(reuseId) as? MKPinAnnotationView
-//        if pinView == nil {
-//            pinView = MKPinAnnotationView(annotation: annotation, reuseIdentifier: reuseId)
-//            pinView?.draggable = true
-//            pinView?.canShowCallout = false
-//        }
-//        else {
-//            pinView?.annotation = annotation
-//        }
-//        
-//        return pinView
-//    }
-//
-//    func mapView(mapView: MKMapView, annotationView view: MKAnnotationView, didChangeDragState newState: MKAnnotationViewDragState, fromOldState oldState: MKAnnotationViewDragState) {
-//        switch (newState) {
-//        case .Starting:
-//            view.dragState = .Dragging
-//            print("Start")
-//        case .Ending, .Canceling:
-//            view.dragState = .None
-//            print("Finish")
-//        default: break
-//        }
-//    }
+    //    func mapView(mapView: MKMapView, viewForAnnotation annotation: MKAnnotation) -> MKAnnotationView? {
+    //        let reuseId = "pin"
+    //        var pinView = mapView.dequeueReusableAnnotationViewWithIdentifier(reuseId) as? MKPinAnnotationView
+    //        if pinView == nil {
+    //            pinView = MKPinAnnotationView(annotation: annotation, reuseIdentifier: reuseId)
+    //            pinView?.draggable = true
+    //            pinView?.canShowCallout = false
+    //        }
+    //        else {
+    //            pinView?.annotation = annotation
+    //        }
+    //
+    //        return pinView
+    //    }
+    //
+    //    func mapView(mapView: MKMapView, annotationView view: MKAnnotationView, didChangeDragState newState: MKAnnotationViewDragState, fromOldState oldState: MKAnnotationViewDragState) {
+    //        switch (newState) {
+    //        case .Starting:
+    //            view.dragState = .Dragging
+    //            print("Start")
+    //        case .Ending, .Canceling:
+    //            view.dragState = .None
+    //            print("Finish")
+    //        default: break
+    //        }
+    //    }
 
     // MARK: Helpers
 
@@ -120,13 +100,13 @@ class LocationMapViewController: UIViewController, NSFetchedResultsControllerDel
 
         else if gestureRecognizer.state == .Changed {
 
-                let tapPoint: CGPoint = gestureRecognizer.locationInView(mapView)
-                let touchMapCoordinate: CLLocationCoordinate2D = mapView.convertPoint(tapPoint, toCoordinateFromView: mapView)
+            let tapPoint: CGPoint = gestureRecognizer.locationInView(mapView)
+            let touchMapCoordinate: CLLocationCoordinate2D = mapView.convertPoint(tapPoint, toCoordinateFromView: mapView)
             annotationPin.coordinate = touchMapCoordinate
 
-                dispatch_async(dispatch_get_main_queue(), {
-                    self.annotationPin.coordinate = touchMapCoordinate
-                })
+            dispatch_async(dispatch_get_main_queue(), {
+                self.annotationPin.coordinate = touchMapCoordinate
+            })
         }
 
         if gestureRecognizer.state == .Ended {
@@ -136,16 +116,15 @@ class LocationMapViewController: UIViewController, NSFetchedResultsControllerDel
 
             let pin = Pin(latitude: touchMapCoordinate.latitude, longitude: touchMapCoordinate.longitude, context: sharedContext)
             CoreDataStackManager.sharedInstance.saveContext()
-            let number = preloadPhoto(pin)
-            showPhotoAlbum(pin, resultCount: number)
+
+            Flickr.sharedInstance.loadPin(pin) { (success, error) -> Void in }
+            showPhotoAlbum(pin)
         }
     }
 
-    func showPhotoAlbum(pin: Pin, resultCount: Int?) {
+    func showPhotoAlbum(pin: Pin) {
         let nextView = self.storyboard?.instantiateViewControllerWithIdentifier("PhotoAlbumViewController") as! PhotoAlbumViewController
         nextView.selectedPin = pin
-        nextView.resultCount = resultCount
-
         self.navigationController?.pushViewController(nextView, animated: true)
     }
 
@@ -171,46 +150,5 @@ class LocationMapViewController: UIViewController, NSFetchedResultsControllerDel
     func updatePin(pin: Pin) {
         mapView.removeAnnotation(pin)
         mapView.addAnnotation(pin)
-    }
-
-    // MARK: - Helpers
-    func preloadPhoto(pin: Pin) -> Int {
-        var number: Int = 0
-        
-        let parameters: [String:AnyObject] = [
-            "method": Flickr.Resources.SearchPhotos,
-            "api_key": Flickr.Constants.ApiKey!,
-            "bbox": Flickr.sharedInstance.calculateBboxParameters(pin.latitude, longitude: pin.longitude),
-            "extras": Flickr.Keys.Extras,
-            "format": Flickr.Keys.Format,
-            "nojsoncallback": Flickr.Keys.No_json_Callback,
-            "page": Int(arc4random_uniform(10)),
-            "per_page": 30
-        ]
-
-        Flickr.sharedInstance.taskForResource(parameters) { parsedResult, error in
-
-            if let error = error {
-                print("Error searching for Images: \(error.localizedDescription)")
-                return
-            }
-            guard let photosDictionary = parsedResult["photos"] as? NSDictionary,
-                photoArray = photosDictionary["photo"] as? [[String: AnyObject]] else {
-                    print("Cannot find keys 'photos' and 'photo' in \(parsedResult)")
-                    return
-            }
-
-            let _ = photoArray.map() { (dictionary: [String: AnyObject]) -> Photo in
-                let photo = Photo(dictionary: dictionary, context: self.sharedContext)
-                photo.locations = pin
-                return photo
-            }
-
-            number = photoArray.count
-
-            // Save managed object context
-            CoreDataStackManager.sharedInstance.saveContext()
-        }
-        return number
     }
 }
