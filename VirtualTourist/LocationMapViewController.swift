@@ -10,6 +10,8 @@ import UIKit
 import MapKit
 import CoreData
 
+let statusPhotosCollection = "statusPhotosCollection"
+
 class LocationMapViewController: UIViewController {
 
     // MARK: - Properties
@@ -35,6 +37,8 @@ class LocationMapViewController: UIViewController {
 
         // Load Pin on mapView
         mapView.addAnnotations(fetchedResultsController.fetchedObjects as! [Pin])
+
+        NSNotificationCenter.defaultCenter().addObserver(self, selector: nil, name: statusPhotosCollection, object: nil)
     }
 
     // Initialize CoreData and NSFetchedResultsController
@@ -88,9 +92,12 @@ class LocationMapViewController: UIViewController {
 
             let pin = Pin(latitude: touchMapCoordinate.latitude, longitude: touchMapCoordinate.longitude, context: sharedContext)
             CoreDataStackManager.sharedInstance.saveContext()
-
-            Flickr.sharedInstance.loadPin(pin) { (success, error) -> Void in }
             showPhotoAlbum(pin)
+            Flickr.sharedInstance.loadPin(pin) { (success, error) -> Void in
+                if !success {
+                    NSNotificationCenter.defaultCenter().postNotificationName(statusPhotosCollection, object: self)
+                }
+            }
         }
     }
 
@@ -158,7 +165,7 @@ extension LocationMapViewController: NSFetchedResultsControllerDelegate {
             return
         }
     }
-
+    
     func controllerDidChangeContent(controller: NSFetchedResultsController) {
         mapView.reloadInputViews()
     }

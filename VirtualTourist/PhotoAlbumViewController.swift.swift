@@ -49,17 +49,21 @@ class PhotoAlbumViewController: UIViewController, UICollectionViewDelegateFlowLa
         } catch let error as NSError {
             print("Error: \(error.localizedDescription)")
         }
+
+        // Add listener for emptyCollection
+        NSNotificationCenter.defaultCenter().addObserver(self, selector: "displayNoPhotosReturn", name: statusPhotosCollection, object: nil)
+    }
+
+    func displayNoPhotosReturn() {
+        dispatch_async(dispatch_get_main_queue()) {
+        self.statusPhotoLabel.hidden = false
+        self.statusPhotoLabel.text = Flickr.AppCopy.noPhotosFoundInCollection
+        self.toolBarButton.enabled = false
+        }
     }
 
     override func viewDidAppear(animated: Bool) {
         super.viewWillAppear(true)
-
-        // Check if fetchedResultsController returned objects
-        if fetchedResultsController.fetchedObjects!.count == 0 {
-            statusPhotoLabel.hidden = false
-            statusPhotoLabel.text = Flickr.AppCopy.noPhotosFoundInCollection
-            toolBarButton.enabled = false
-        }
     }
 
     // Initialize CoreData and NSFetchedResultsController
@@ -82,6 +86,8 @@ class PhotoAlbumViewController: UIViewController, UICollectionViewDelegateFlowLa
         return fetchedResultsController
 
     }()
+
+    // MARK: - Actions
 
     @IBAction func toolbarButtonAction(sender: AnyObject) {
         if toolBarButton.title == Flickr.AppCopy.newCollection {
@@ -150,6 +156,9 @@ class PhotoAlbumViewController: UIViewController, UICollectionViewDelegateFlowLa
         }
 
         blockOperations.removeAll(keepCapacity: false)
+        
+        // Deinitialise Listener
+        NSNotificationCenter.defaultCenter().removeObserver(self)
     }
 }
 

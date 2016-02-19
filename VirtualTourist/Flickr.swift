@@ -15,7 +15,9 @@ class Flickr : NSObject {
     static var sharedInstance = Flickr()
 
     typealias CompletionHander = (result: AnyObject!, error: NSError?) -> Void
+
     var session: NSURLSession
+
     override init() {
         session = NSURLSession.sharedSession()
         super.init()
@@ -78,7 +80,7 @@ class Flickr : NSObject {
                 return completionHandler(success: false, error: error)
             }
 
-            guard photosDictionary["total"]! as? Int != 0 else {
+            guard !photoArray.isEmpty else {
                 return completionHandler(success: false, error: error)
             }
 
@@ -86,11 +88,15 @@ class Flickr : NSObject {
                 let _ = photoArray.map() { (dictionary: [String: AnyObject]) -> Photo in
                     let photo = Photo(dictionary: dictionary, context: CoreDataStackManager.sharedInstance.managedObjectContext)
                     photo.locations = pin
+                    Flickr.sharedInstance.taskForImage(photo.imageUrl) { imageData, error in
+                        if let image = imageData {
+                                photo.image = UIImage(data: image)
+                        }
+                    }
                     return photo
                 }
                 CoreDataStackManager.sharedInstance.saveContext()
             }
-            
             return completionHandler(success: true, error: error)
         }
     }
