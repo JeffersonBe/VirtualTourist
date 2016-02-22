@@ -94,11 +94,17 @@ class LocationMapViewController: UIViewController {
             CoreDataStackManager.sharedInstance.saveContext()
 
             Flickr.sharedInstance.loadPin(pin) { (success, error) -> Void in
-                if !success {
+                if success {
+                    dispatch_async(dispatch_get_main_queue(), {
+                        self.showPhotoAlbum(pin)
+                    })
+                } else {
                     NSNotificationCenter.defaultCenter().postNotificationName(statusPhotosCollection, object: self)
+                    dispatch_async(dispatch_get_main_queue(), {
+                        self.showPhotoAlbum(pin)
+                    })
                 }
             }
-            showPhotoAlbum(pin)
         }
     }
 
@@ -118,7 +124,6 @@ extension LocationMapViewController: MKMapViewDelegate {
 
     // MARK: Mapkit Delegate
 
-    // Fix Pin that doesn't launch
     func mapView(mapView: MKMapView, didSelectAnnotationView view: MKAnnotationView){
         if view.annotation!.isKindOfClass(Pin) {
             showPhotoAlbum(view.annotation as! Pin)
@@ -126,34 +131,6 @@ extension LocationMapViewController: MKMapViewDelegate {
             mapView.deselectAnnotation(view.annotation, animated: false)
         }
     }
-
-    // TODO: - Implement drag functionality
-    //    func mapView(mapView: MKMapView, viewForAnnotation annotation: MKAnnotation) -> MKAnnotationView? {
-    //        let reuseId = "pin"
-    //        var pinView = mapView.dequeueReusableAnnotationViewWithIdentifier(reuseId) as? MKPinAnnotationView
-    //        if pinView == nil {
-    //            pinView = MKPinAnnotationView(annotation: annotation, reuseIdentifier: reuseId)
-    //            pinView?.draggable = true
-    //            pinView?.canShowCallout = false
-    //        }
-    //        else {
-    //            pinView?.annotation = annotation
-    //        }
-    //
-    //        return pinView
-    //    }
-    //
-    //    func mapView(mapView: MKMapView, annotationView view: MKAnnotationView, didChangeDragState newState: MKAnnotationViewDragState, fromOldState oldState: MKAnnotationViewDragState) {
-    //        switch (newState) {
-    //        case .Starting:
-    //            view.dragState = .Dragging
-    //            print("Start")
-    //        case .Ending, .Canceling:
-    //            view.dragState = .None
-    //            print("Finish")
-    //        default: break
-    //        }
-    //    }
 }
 
 extension LocationMapViewController: NSFetchedResultsControllerDelegate {
@@ -171,7 +148,7 @@ extension LocationMapViewController: NSFetchedResultsControllerDelegate {
             return
         }
     }
-    
+
     func controllerDidChangeContent(controller: NSFetchedResultsController) {
         mapView.reloadInputViews()
     }
