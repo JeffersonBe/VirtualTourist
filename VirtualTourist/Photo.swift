@@ -15,6 +15,7 @@ class Photo: NSManagedObject {
 
     @NSManaged var title: String
     @NSManaged var imageUrl: String
+    @NSManaged var imageId: String
     @NSManaged var locations: Pin?
 
     override init(entity: NSEntityDescription,
@@ -30,19 +31,21 @@ class Photo: NSManagedObject {
 
         title = dictionary[Flickr.JSONKeys.Title] as! String
         imageUrl = dictionary[Flickr.JSONKeys.imageUrl] as! String
+        let url = NSURL(string:imageUrl)
+        imageId = url!.lastPathComponent!.stringByReplacingOccurrencesOfString(".jpg", withString: "")
     }
 
     var image: UIImage? {
         get {
-            return Flickr.Caches.imageCache.imageWithIdentifier(imageUrl)
+            return Flickr.Caches.imageCache.imageWithIdentifier(imageId)
         }
 
         set {
-            Flickr.Caches.imageCache.storeImage(image, withIdentifier: imageUrl)
+            Flickr.Caches.imageCache.storeImage(newValue, withIdentifier: imageId)
         }
     }
 
     override func prepareForDeletion() {
-        Flickr.Caches.imageCache.deleteCache(imageUrl)
+        Flickr.Caches.imageCache.deleteCache(imageId)
     }
 }

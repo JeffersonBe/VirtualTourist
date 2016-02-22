@@ -40,6 +40,7 @@ class ImageCache {
 
     func storeImage(image: UIImage?, withIdentifier identifier: String) {
         let path = pathForIdentifier(identifier)
+        print("First")
 
         // If the image is nil, remove images from the cache
         if image == nil {
@@ -52,12 +53,14 @@ class ImageCache {
             return
         }
 
+        print("Second")
+
         // Otherwise, keep the image in memory
         inMemoryCache.setObject(image!, forKey: path)
 
         // And in documents directory
-        let data = UIImagePNGRepresentation(image!)!
-        data.writeToFile(path, atomically: true)
+        let data = UIImageJPEGRepresentation(image!, 1.0)
+        data!.writeToFile(path, atomically: true)
     }
 
     // MARK: - Deleting imags

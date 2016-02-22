@@ -90,14 +90,15 @@ class LocationMapViewController: UIViewController {
             let tapPoint: CGPoint = gestureRecognizer.locationInView(mapView)
             let touchMapCoordinate: CLLocationCoordinate2D = mapView.convertPoint(tapPoint, toCoordinateFromView: mapView)
 
-            let pin = Pin(latitude: touchMapCoordinate.latitude, longitude: touchMapCoordinate.longitude, context: sharedContext)
+            let pin = Pin(latitude: touchMapCoordinate.latitude, longitude: touchMapCoordinate.longitude, context: self.sharedContext)
             CoreDataStackManager.sharedInstance.saveContext()
-            showPhotoAlbum(pin)
+
             Flickr.sharedInstance.loadPin(pin) { (success, error) -> Void in
                 if !success {
                     NSNotificationCenter.defaultCenter().postNotificationName(statusPhotosCollection, object: self)
                 }
             }
+            showPhotoAlbum(pin)
         }
     }
 
@@ -117,8 +118,13 @@ extension LocationMapViewController: MKMapViewDelegate {
 
     // MARK: Mapkit Delegate
 
+    // Fix Pin that doesn't launch
     func mapView(mapView: MKMapView, didSelectAnnotationView view: MKAnnotationView){
-        showPhotoAlbum(view.annotation as! Pin)
+        if view.annotation!.isKindOfClass(Pin) {
+            showPhotoAlbum(view.annotation as! Pin)
+        } else {
+            mapView.deselectAnnotation(view.annotation, animated: false)
+        }
     }
 
     // TODO: - Implement drag functionality

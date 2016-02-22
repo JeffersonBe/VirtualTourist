@@ -55,10 +55,12 @@ class PhotoAlbumViewController: UIViewController, UICollectionViewDelegateFlowLa
     }
 
     func displayNoPhotosReturn() {
-        dispatch_async(dispatch_get_main_queue()) {
-        self.statusPhotoLabel.hidden = false
-        self.statusPhotoLabel.text = Flickr.AppCopy.noPhotosFoundInCollection
-        self.toolBarButton.enabled = false
+        if fetchedResultsController.fetchedObjects?.count == 0 {
+            dispatch_async(dispatch_get_main_queue()) {
+                self.statusPhotoLabel.hidden = false
+                self.statusPhotoLabel.text = Flickr.AppCopy.noPhotosFoundInCollection
+                self.toolBarButton.enabled = false
+            }
         }
     }
 
@@ -92,13 +94,17 @@ class PhotoAlbumViewController: UIViewController, UICollectionViewDelegateFlowLa
     @IBAction func toolbarButtonAction(sender: AnyObject) {
         if toolBarButton.title == Flickr.AppCopy.newCollection {
             for photo in fetchedResultsController.fetchedObjects!{
-                sharedContext.deleteObject(photo as! NSManagedObject)
+                CoreDataStackManager.sharedInstance.managedObjectContext.performBlock() {
+                    self.sharedContext.deleteObject(photo as! NSManagedObject)
+                }
             }
             CoreDataStackManager.sharedInstance.saveContext()
             loadPhotos(selectedPin)
         } else {
             for photo in arrayPhotoToDelete {
-                sharedContext.deleteObject(fetchedResultsController.objectAtIndexPath(photo) as! NSManagedObject)
+                CoreDataStackManager.sharedInstance.managedObjectContext.performBlock() {
+                self.sharedContext.deleteObject(self.fetchedResultsController.objectAtIndexPath(photo) as! NSManagedObject)
+                }
             }
             CoreDataStackManager.sharedInstance.saveContext()
             arrayPhotoToDelete.removeAll()
@@ -126,7 +132,8 @@ class PhotoAlbumViewController: UIViewController, UICollectionViewDelegateFlowLa
             Flickr.sharedInstance.taskForImage(photo.imageUrl) { imageData, error in
                 if let image = imageData {
                     dispatch_async(dispatch_get_main_queue()) {
-                        cell.imageView.image = UIImage(data: image)
+                        photo.image = UIImage(data: image)
+                        cell.imageView.image = photo.image
                         UIView.animateWithDuration(0.5, delay: 0.0, options: UIViewAnimationOptions.CurveEaseOut, animations: {
                             cell.alpha = 1.0
                             }, completion: nil)
@@ -156,7 +163,7 @@ class PhotoAlbumViewController: UIViewController, UICollectionViewDelegateFlowLa
         }
 
         blockOperations.removeAll(keepCapacity: false)
-        
+
         // Deinitialise Listener
         NSNotificationCenter.defaultCenter().removeObserver(self)
     }

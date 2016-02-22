@@ -76,26 +76,29 @@ class Flickr : NSObject {
             }
 
             guard let photosDictionary = parsedResult["photos"] as? NSDictionary,
-            let photoArray = photosDictionary["photo"] as? [[String: AnyObject]] else {
-                return completionHandler(success: false, error: error)
+                let photoArray = photosDictionary["photo"] as? [[String: AnyObject]] else {
+                    return completionHandler(success: false, error: error)
             }
 
             guard !photoArray.isEmpty else {
                 return completionHandler(success: false, error: error)
             }
 
-            dispatch_async(dispatch_get_global_queue(QOS_CLASS_BACKGROUND, 0)) {
+            CoreDataStackManager.sharedInstance.managedObjectContext.performBlock() {
+
                 let _ = photoArray.map() { (dictionary: [String: AnyObject]) -> Photo in
+                    
                     let photo = Photo(dictionary: dictionary, context: CoreDataStackManager.sharedInstance.managedObjectContext)
                     photo.locations = pin
-                    Flickr.sharedInstance.taskForImage(photo.imageUrl) { imageData, error in
-                        if let image = imageData {
-                                photo.image = UIImage(data: image)
+
+                    self.taskForImage(photo.imageUrl) { imageData, error in
+                        if imageData != nil {
+                            photo.image = UIImage(data: imageData!)
                         }
                     }
+                    CoreDataStackManager.sharedInstance.saveContext()
                     return photo
                 }
-                CoreDataStackManager.sharedInstance.saveContext()
             }
             return completionHandler(success: true, error: error)
         }
@@ -211,13 +214,13 @@ class Flickr : NSObject {
             bBoxLatMin = latMin
             bBoxLatMax = latMax - bboxEdge
         }
-
+        
         if bBoxLongMax > longMax {
             bBoxLongMax = (bBoxLongMax - longMax) + longMin
         } else if bBoxLongMin < longMin {
             bBoxLongMin = longMax - (bBoxLongMin + longMin)
         }
-
+        
         return "\(bBoxLongMin),\(bBoxLatMin),\(bBoxLongMax),\(bBoxLatMax)"
     }
 }
