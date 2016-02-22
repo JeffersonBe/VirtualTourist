@@ -46,8 +46,15 @@
                             <constraint firstItem="MIU-94-z0q" firstAttribute="top" secondItem="XJz-uS-fjg" secondAttribute="bottom" id="WKH-ue-uEk"/>
                         </constraints>
                     </view>
-                    <navigationItem key="navigationItem" title="Virtual Tourist" id="v2c-Bd-MtF"/>
+                    <navigationItem key="navigationItem" title="Virtual Tourist" id="v2c-Bd-MtF">
+                        <barButtonItem key="rightBarButtonItem" title="Edit" id="Ylb-Ho-LWB">
+                            <connections>
+                                <action selector="editAction:" destination="XKZ-J6-BFD" id="I4R-D2-xoF"/>
+                            </connections>
+                        </barButtonItem>
+                    </navigationItem>
                     <connections>
+                        <outlet property="editButton" destination="Ylb-Ho-LWB" id="xgF-RB-lCE"/>
                         <outlet property="mapView" destination="MIU-94-z0q" id="9Cj-Qg-U0y"/>
                         <segue destination="oFg-hz-peW" kind="showDetail" identifier="SegueToPhotoAlbumViewController" id="4TT-l2-sbX"/>
                     </connections>
@@ -95,7 +102,7 @@
                             <label hidden="YES" opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="Label" textAlignment="natural" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="NLL-Au-QJh">
                                 <rect key="frame" x="279" y="332" width="42" height="21"/>
                                 <fontDescription key="fontDescription" type="system" pointSize="17"/>
-                                <color key="textColor" cocoaTouchSystemColor="darkTextColor"/>
+                                <color key="textColor" red="0.0" green="0.0" blue="0.0" alpha="1" colorSpace="calibratedRGB"/>
                                 <nil key="highlightedColor"/>
                             </label>
                             <toolbar opaque="NO" clearsContextBeforeDrawing="NO" contentMode="scaleToFill" translatesAutoresizingMaskIntoConstraints="NO" id="GpT-b6-uqm">

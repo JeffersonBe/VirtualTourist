@@ -15,8 +15,10 @@ let statusPhotosCollection = "statusPhotosCollection"
 class LocationMapViewController: UIViewController {
 
     // MARK: - Properties
+    @IBOutlet weak var editButton: UIBarButtonItem!
     @IBOutlet weak var mapView: MKMapView!
     var annotationPin = MKPointAnnotation()
+    var editMode: Bool = false
 
     // MARK: - Initialization
     override func viewDidLoad() {
@@ -60,6 +62,21 @@ class LocationMapViewController: UIViewController {
     }()
 
     // MARK: Helpers
+
+    @IBAction func editAction(sender: AnyObject) {
+        editMode = editMode ? false : true
+        if editMode {
+            navigationController?.navigationBar.barTintColor = UIColor.redColor()
+            navigationController?.navigationBar.tintColor = UIColor.whiteColor()
+            navigationController?.navigationBar.titleTextAttributes = [NSForegroundColorAttributeName: UIColor.whiteColor()]
+            navigationItem.title = "Tap pin to delete"
+        } else {
+            navigationController?.navigationBar.barTintColor = UIColor.whiteColor()
+            navigationController?.navigationBar.tintColor = UIColor.blueColor()
+            navigationController?.navigationBar.titleTextAttributes = [NSForegroundColorAttributeName: UIColor.blackColor()]
+            navigationItem.title = "Virtual Tourist"
+        }
+    }
 
     func addPin(gestureRecognizer: UIGestureRecognizer) {
 
@@ -125,10 +142,15 @@ extension LocationMapViewController: MKMapViewDelegate {
     // MARK: Mapkit Delegate
 
     func mapView(mapView: MKMapView, didSelectAnnotationView view: MKAnnotationView){
-        if view.annotation!.isKindOfClass(Pin) {
-            showPhotoAlbum(view.annotation as! Pin)
+        if editMode {
+            sharedContext.deleteObject(view.annotation as! Pin)
+            CoreDataStackManager.sharedInstance.saveContext()
         } else {
-            mapView.deselectAnnotation(view.annotation, animated: false)
+            if view.annotation!.isKindOfClass(Pin) {
+                showPhotoAlbum(view.annotation as! Pin)
+            } else {
+                mapView.deselectAnnotation(view.annotation, animated: false)
+            }
         }
     }
 }
