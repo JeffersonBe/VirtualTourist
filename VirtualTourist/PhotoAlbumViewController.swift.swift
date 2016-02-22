@@ -94,17 +94,13 @@ class PhotoAlbumViewController: UIViewController, UICollectionViewDelegateFlowLa
     @IBAction func toolbarButtonAction(sender: AnyObject) {
         if toolBarButton.title == Flickr.AppCopy.newCollection {
             for photo in fetchedResultsController.fetchedObjects!{
-                CoreDataStackManager.sharedInstance.managedObjectContext.performBlock() {
                     self.sharedContext.deleteObject(photo as! NSManagedObject)
-                }
             }
             CoreDataStackManager.sharedInstance.saveContext()
             loadPhotos(selectedPin)
         } else {
             for photo in arrayPhotoToDelete {
-                CoreDataStackManager.sharedInstance.managedObjectContext.performBlock() {
                 self.sharedContext.deleteObject(self.fetchedResultsController.objectAtIndexPath(photo) as! NSManagedObject)
-                }
             }
             CoreDataStackManager.sharedInstance.saveContext()
             arrayPhotoToDelete.removeAll()
@@ -199,7 +195,7 @@ extension PhotoAlbumViewController: UICollectionViewDelegate {
         UIView.animateWithDuration(0.1, delay: 0.0, options: UIViewAnimationOptions.CurveEaseOut, animations: {
             cell?.alpha = 1.0
             }, completion: nil)
-        arrayPhotoToDelete.removeAtIndex(arrayPhotoToDelete.indexOf(indexPath)!)
+        arrayPhotoToDelete.removeAtIndex((arrayPhotoToDelete.indexOf(indexPath)!))
         updateToolbar()
     }
 

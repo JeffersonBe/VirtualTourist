@@ -40,7 +40,6 @@ class ImageCache {
 
     func storeImage(image: UIImage?, withIdentifier identifier: String) {
         let path = pathForIdentifier(identifier)
-        print("First")
 
         // If the image is nil, remove images from the cache
         if image == nil {
@@ -52,8 +51,6 @@ class ImageCache {
 
             return
         }
-
-        print("Second")
 
         // Otherwise, keep the image in memory
         inMemoryCache.setObject(image!, forKey: path)
